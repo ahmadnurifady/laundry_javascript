@@ -1,0 +1,3 @@
+.env
+src/logger/logResult
+node_modules
