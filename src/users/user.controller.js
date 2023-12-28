@@ -2,7 +2,7 @@ const { constants } = require("http2");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
 const { UserControllerLogTitle } = require("./users.domain");
-const { login } = require("./users.services");
+const { login, findUserById, createUser, findAll, updateUser, deleteUser } = require("./users.services");
 
 const loginController = async (req, res, next) => {
   try {
@@ -20,6 +20,79 @@ const loginController = async (req, res, next) => {
   }
 };
 
+const findIdUserController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await findUserById(id)
+    return res.status(200).send(result)
+  } catch (err) {
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserControllerLogTitle.ERROR,
+      logMessage: err.message,
+    });
+  }
+}
+
+const createUserController = async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    const result = await createUser({ username: username, password: password })
+    return res.status(200).send(result)
+    
+  } catch (err) {
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserControllerLogTitle.ERROR,
+      logMessage: err.message,
+    });
+  }
+}
+
+const findAllUserController = async (req ,res, next) => {
+  try{
+    const result = await findAll()
+    return res.status(200).send(result)
+  }catch (err){
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserControllerLogTitle.ERROR,
+      logMessage: err.message,
+    });
+  }
+};
+
+const updateUserController = async(req, res, next) => {
+  try{
+    const {id} = req.params;
+    const {username, password} = req.body;
+    const result = await updateUser(id,{username:username, password:password})
+    return res.status(200).send(result)
+  }catch (err){
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserControllerLogTitle.ERROR,
+      logMessage: err.message,
+    });
+  }
+};
+
+const deleteUserController = async (req, res, next) => {
+  try{
+    const {id} = req.params;
+    const result = await deleteUser(id)
+    return res.status(200).send(result)
+  }catch (err){
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserControllerLogTitle.ERROR,
+      logMessage: err.message,
+    });
+  }
+
+}
+
+
 module.exports = {
-    loginController
+  loginController,
+  findIdUserController,
+  createUserController,
+  findAllUserController,
+  updateUserController,
+  deleteUserController
 }

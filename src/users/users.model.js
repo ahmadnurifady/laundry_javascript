@@ -3,7 +3,7 @@ const { connection } = require("../database/connection");
 
 const Users = connection.define("users", {
   id: {
-    type: DataTypes.UUIDV4,
+    type: DataTypes.UUID,
     primaryKey: true,
     allowNull: false,
   },

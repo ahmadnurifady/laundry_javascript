@@ -15,10 +15,7 @@ const { logEvent } = require("./src/logger/logger");
     app.use(express.json());
     app.use(cors());
     app.use(routes);
-    logEvent(LOGTYPE.ERROR, {
-      logTitle: 'mANTAP',
-      logMessage: 'MANTAP'
-    })
+
     await connection.authenticate();
   } catch (err) {
     logEvent(LOGTYPE.FATAL, {
