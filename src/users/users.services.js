@@ -78,7 +78,6 @@ const createUser = async ({username = "", password = ""}) => {
       data: create,
       code: constants.HTTP_STATUS_CREATED
     })
-    // console.log("create = ",create);
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,

@@ -70,8 +70,7 @@ const findAllUserController = async (req ,res, next) => {
 
 const updateUserController = async(req, res, next) => {
   try{
-    const {id} = req.params;
-    const {username, password} = req.body;
+    const {id, username, password} = req.body;
     const result = await updateUser(id,{username:username, password:password})
     return res.status(result.code).send(result)
   }catch (err){
@@ -87,7 +86,7 @@ const updateUserController = async(req, res, next) => {
 
 const deleteUserController = async (req, res, next) => {
   try{
-    const {id} = req.params;
+    const {id} = req.body;
     const result = await deleteUser(id)
     return res.status(result.code).send(result)
   }catch (err){
