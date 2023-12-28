@@ -24,38 +24,47 @@ const findIdUserController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await findUserById(id)
-    return res.status(200).send(result)
+    return res.status(result.code).send(result)
   } catch (err) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserControllerLogTitle.ERROR,
       logMessage: err.message,
     });
+    return res
+      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .status(err.message)
   }
-}
+};
 
 const createUserController = async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const result = await createUser({ username: username, password: password })
-    return res.status(200).send(result)
+    return res.status(result.code).send(result)
     
   } catch (err) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserControllerLogTitle.ERROR,
       logMessage: err.message,
     });
+    return res
+    .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+    .status(err.message)
   }
-}
+};
 
 const findAllUserController = async (req ,res, next) => {
   try{
     const result = await findAll()
-    return res.status(200).send(result)
+    return res.status(result.code).send(result)
   }catch (err){
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserControllerLogTitle.ERROR,
       logMessage: err.message,
     });
+    return res
+    .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+    .status(err.message)
   }
 };
 
@@ -64,12 +73,15 @@ const updateUserController = async(req, res, next) => {
     const {id} = req.params;
     const {username, password} = req.body;
     const result = await updateUser(id,{username:username, password:password})
-    return res.status(200).send(result)
+    return res.status(result.code).send(result)
   }catch (err){
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserControllerLogTitle.ERROR,
       logMessage: err.message,
     });
+    return res
+    .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+    .status(err.message)
   }
 };
 
@@ -77,12 +89,15 @@ const deleteUserController = async (req, res, next) => {
   try{
     const {id} = req.params;
     const result = await deleteUser(id)
-    return res.status(200).send(result)
+    return res.status(result.code).send(result)
   }catch (err){
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserControllerLogTitle.ERROR,
       logMessage: err.message,
     });
+    return res
+    .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+    .status(err.message)
   }
 
 }

@@ -84,6 +84,10 @@ const createUser = async ({username = "", password = ""}) => {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
     });
+    return responseApi({
+      code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      message: e.message,
+    });
   }
 };
 
@@ -111,7 +115,7 @@ const findAll = async() => {
 const updateUser = async(id,{username = "", password = ""}) => {
   try {
     const findUser = await Users.findByPk(id)
-    if(!findUser){ // <-- BELUM BISA
+    if(!findUser){
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
         message: UserServiceErrorMessage.NOT_FOUND
