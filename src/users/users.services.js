@@ -6,9 +6,12 @@ const { responseApi } = require("../utils/response");
 const { constants } = require("http2");
 const bcrypt = require("bcrypt");
 const {v4} = require("uuid");
+const jwt =require("jsonwebtoken");
+const { RoleUsers } = require("../role_user/role.user");
 
 const login = async ({ username = "", password = "" }) => {
   try {
+
     const findUser = await Users.findOne({ where: { username: username } });
     if (!findUser) {
       return responseApi({
@@ -16,10 +19,7 @@ const login = async ({ username = "", password = "" }) => {
         message: UserServiceErrorMessage.WRONG_CREDENTIALS,
       });
     }
-    const isPasswordCorrect = await bcrypt.compareSync(
-      password,
-      finduser.password
-    );
+    const isPasswordCorrect = bcrypt.compareSync(password, findUser.password)
 
     if (!isPasswordCorrect) {
       return responseApi({
@@ -27,13 +27,24 @@ const login = async ({ username = "", password = "" }) => {
         message: UserServiceErrorMessage.WRONG_CREDENTIALS,
       });
     }
-    return responseApi({ code: constants.HTTP_STATUS_OK, data: findUser });
+
+    const token = jwt.sign({id: findUser.id}, process.env.JWT_SECRET,{
+      expiresIn: process.env.REFRESH_EXPIRED,
+    });
+
+
+    return responseApi({
+      message: "success login",
+      code: constants.HTTP_STATUS_OK,
+      data: {token : token} });
+
+
 
   } catch (e) {
     
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
-      logMessage: e.message,
+      logMessage: e.ERROR,
     });
     return responseApi({
       code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -70,14 +81,41 @@ const findUserById = async (id) => {
   }
 }
 
-const createUser = async ({username = "", password = ""}) => {
+const createUser = async ({username = "", password = "",roleUserId = 0}) => {
   try {
-    const create = await Users.create({username: username, password : password, id: v4()})
+    const checkUser = await Users.findOne({
+      where: {
+        username: username
+      }
+    })
+    if(checkUser){
+      return responseApi({
+        message:"username is already in use",
+        data: null,
+        code: constants.HTTP_STATUS_BAD_REQUEST
+      });
+    };
+
+    const checkRole = await RoleUsers.findByPk(roleUserId)
+    if(!checkRole){
+      return responseApi({
+        message: "role is doesn't exist",
+        code: constants.HTTP_STATUS_BAD_REQUEST,
+      })
+    };
+
+    
+    const create = await Users.create({
+      id: v4(),
+      username: username,
+      password : await bcrypt.hash(password, 15),
+      roleUserId: roleUserId,
+    });
     return responseApi({
       message: "success create user",
       data: create,
-      code: constants.HTTP_STATUS_CREATED
-    })
+      code: constants.HTTP_STATUS_CREATED,
+    });
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
@@ -87,11 +125,12 @@ const createUser = async ({username = "", password = ""}) => {
       code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
       message: e.message,
     });
-  }
+  };
 };
 
 const findAll = async() => {
   try {
+
     const findAllUser = await Users.findAll()
 
     return responseApi({
