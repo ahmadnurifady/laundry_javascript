@@ -13,7 +13,7 @@ const { RelationalMiddleware } = require("./src/middleware/relational.middleware
   if(result.error){
     console.log(result.error);
   }
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 5000;
 
   try {
     console.log('mantap');
