@@ -16,8 +16,6 @@ async function RelationalMiddleware(req, res, next) {
 
         Linens.belongsTo(Category)
         Category.hasMany(Linens)
-    
-
 
         Linens.belongsTo(Transaction)
         Transaction.hasMany(Linens)

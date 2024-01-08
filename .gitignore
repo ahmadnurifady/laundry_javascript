@@ -1,3 +1,4 @@
 .env
 src/logger/logResult/*.json
 node_modules
+src/logger/logResult
