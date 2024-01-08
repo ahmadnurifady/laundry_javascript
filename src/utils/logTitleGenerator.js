@@ -2,10 +2,15 @@ const SPOT_LOG_TYPE = {
     CONTROLLER: 'CONTROLLER',
     ROUTER: 'ROUTER',
     SERVICES: 'SERVICES',
+    MIDDLEWARE: 'MIDDLEWARE'
 }
 
 const MODULE_LOG_TYPE = {
-    USERS: 'USERS'
+    USERS: 'USERS',
+    LINENS: 'LINENS',
+    TRANSACTION: 'TRANSACTION',
+    AUTHMIDDLEWARE: 'AUTHMIDDLEWARE'
+
 }
 
 const logTitleGenerator = (type, spotLog, moduleLogType) => {
@@ -15,5 +20,5 @@ const logTitleGenerator = (type, spotLog, moduleLogType) => {
 module.exports = {
     SPOT_LOG_TYPE,
     MODULE_LOG_TYPE,
-    logTitleGenerator
+    logTitleGenerator,
 }

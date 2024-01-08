@@ -3,17 +3,23 @@ const dotenv = require("dotenv");
 const app = express();
 const cors = require("cors");
 const routes = require("./src/index.route");
+const result = dotenv.configDotenv();
 const { connection } = require("./src/database/connection");
 const { LOGTYPE } = require("./src/logger/logger.domain");
 const { logEvent } = require("./src/logger/logger");
+const { RelationalMiddleware } = require("./src/middleware/relational.middleware");
 
 (async () => {
-  dotenv.config();
+  if(result.error){
+    console.log(result.error);
+  }
   const port = process.env.PORT || 3000;
 
   try {
+    console.log('mantap');
     app.use(express.json());
     app.use(cors());
+    app.use(RelationalMiddleware);
     app.use(routes);
 
     await connection.authenticate();

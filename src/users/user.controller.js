@@ -38,8 +38,9 @@ const findIdUserController = async (req, res, next) => {
 
 const createUserController = async (req, res, next) => {
   try {
-    const { username, password } = req.body;
-    const result = await createUser({ username: username, password: password })
+    const { username, password, roleUserId } = req.body;
+    console.log("controller",roleUserId)
+    const result = await createUser({ username: username, password: password, roleUserId : roleUserId })
     return res.status(result.code).send(result)
     
   } catch (err) {
@@ -70,8 +71,10 @@ const findAllUserController = async (req ,res, next) => {
 
 const updateUserController = async(req, res, next) => {
   try{
+    const loginId = req.userId;
+    console.log(loginId)
     const {id, username, password} = req.body;
-    const result = await updateUser(id,{username:username, password:password})
+    const result = await updateUser(loginId,{username:username, password:password})
     return res.status(result.code).send(result)
   }catch (err){
     logEvent(LOGTYPE.ERROR, {
