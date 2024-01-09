@@ -28,9 +28,9 @@ const Users = connection.define("users", {
   },
 
   barcodeId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
+    type: DataTypes.UUID,
+    allowNull: true,
+    unique: true
   }
 });
 

@@ -3,6 +3,7 @@ const { Linens } = require('../linens/linen.model')
 const { RoleUsers } = require('../role_user/role.user')
 const { Transaction } = require('../transaction/transaction.model')
 const { Users } = require('../users/users.model')
+const { createUser } = require('../users/users.services')
 const {connection} = require('./connection')
 
 
@@ -14,7 +15,11 @@ async function migration () {
     await Category.sync()
     await Linens.sync()
     await Transaction.sync()
-
+   try{
+    await createUser({password: '123456', roleUserId: 1, username: 'test2'});
+   }catch(e){
+    console.log(e);
+   }
 }
 
 migration()

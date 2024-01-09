@@ -11,7 +11,6 @@ const { RoleUsers } = require("../role_user/role.user");
 
 const login = async ({ username = "", password = "" }) => {
   try {
-
     const findUser = await Users.findOne({ where: { username: username } });
     if (!findUser) {
       return responseApi({
@@ -32,14 +31,10 @@ const login = async ({ username = "", password = "" }) => {
       expiresIn: process.env.REFRESH_EXPIRED,
     });
 
-
     return responseApi({
       message: "success login",
       code: constants.HTTP_STATUS_OK,
       data: {token : token} });
-
-
-
   } catch (e) {
     
     logEvent(LOGTYPE.ERROR, {
