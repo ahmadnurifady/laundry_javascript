@@ -168,9 +168,15 @@ const updateUser = async(id,{username = "", password = "", barcodeId = ""}) => {
         message: UserServiceErrorMessage.NOT_FOUND
       });
     };
-    findUser.username = username
+    if(username){
+      findUser.username = username
+    }
+    if(password){
     findUser.password = password
+    } 
+    if(barcodeId){
     findUser.barcodeId = barcodeId
+    };
     findUser.save()
 
     return responseApi({
