@@ -38,9 +38,9 @@ const findIdUserController = async (req, res, next) => {
 
 const createUserController = async (req, res, next) => {
   try {
-    const { username, password, roleUserId } = req.body;
+    const { username, password, roleUserId, barcodeId } = req.body;
     console.log("controller",roleUserId)
-    const result = await createUser({ username: username, password: password, roleUserId : roleUserId })
+    const result = await createUser({ username: username, password: password, roleUserId : roleUserId, barcodeId: barcodeId })
     return res.status(result.code).send(result)
     
   } catch (err) {
@@ -73,8 +73,8 @@ const updateUserController = async(req, res, next) => {
   try{
     const loginId = req.userId;
     console.log(loginId)
-    const {id, username, password} = req.body;
-    const result = await updateUser(loginId,{username:username, password:password})
+    const {id, username, password, barcodeId} = req.body;
+    const result = await updateUser(id,{username:username, password:password, barcodeId: barcodeId})
     return res.status(result.code).send(result)
   }catch (err){
     logEvent(LOGTYPE.ERROR, {

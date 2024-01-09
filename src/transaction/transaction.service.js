@@ -5,13 +5,15 @@ const { constants } = require("http2");
 const { TransactionServiceLogTitle } = require("./transaction.domain");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
+const { Users } = require("../users/users.model");
+const { Linens } = require("../linens/linen.model");
 
 
 
 const createTransaction = async({givenBy = "", takenBy = "", isMoved = false, linenId = ""}) => {
     try {
         const create = await Transaction.create({
-            id:  v4,
+            id:  v4(),
             givenBy: givenBy,
             takenBy:takenBy,
             isMoved:isMoved,

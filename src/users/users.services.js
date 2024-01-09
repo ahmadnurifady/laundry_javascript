@@ -81,7 +81,7 @@ const findUserById = async (id) => {
   }
 }
 
-const createUser = async ({username = "", password = "",roleUserId = 0}) => {
+const createUser = async ({username = "", password = "",roleUserId = 0, barcodeId = ""}) => {
   try {
     const checkUser = await Users.findOne({
       where: {
@@ -104,12 +104,25 @@ const createUser = async ({username = "", password = "",roleUserId = 0}) => {
       })
     };
 
+    const checkBarcodeId = await Users.findOne({
+      where: {
+        barcodeId: barcodeId
+      }
+    });
+    if(checkBarcodeId){
+      return responseApi({
+        message: "BarcodeId is already use",
+        code: constants.HTTP_STATUS_BAD_REQUEST,
+      })
+    };
+
     
     const create = await Users.create({
       id: v4(),
       username: username,
       password : await bcrypt.hash(password, 15),
       roleUserId: roleUserId,
+      barcodeId: barcodeId,
     });
     return responseApi({
       message: "success create user",
@@ -117,6 +130,7 @@ const createUser = async ({username = "", password = "",roleUserId = 0}) => {
       code: constants.HTTP_STATUS_CREATED,
     });
   } catch (e) {
+    console.log(e)
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
@@ -150,7 +164,7 @@ const findAll = async() => {
   }
 };
 
-const updateUser = async(id,{username = "", password = ""}) => {
+const updateUser = async(id,{username = "", password = "", barcodeId = ""}) => {
   try {
     const findUser = await Users.findByPk(id)
     if(!findUser){
@@ -161,6 +175,7 @@ const updateUser = async(id,{username = "", password = ""}) => {
     };
     findUser.username = username
     findUser.password = password
+    findUser.barcodeId = barcodeId
     findUser.save()
 
     return responseApi({
