@@ -2,7 +2,7 @@ const { constants } = require("http2");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
 const { UserControllerLogTitle } = require("./users.domain");
-const { login, findUserById, createUser, findAll, updateUser, deleteUser } = require("./users.services");
+const { login, findUserById, createUser, findAll, updateUser, deleteUser, changePassword, changeBarcodeId } = require("./users.services");
 
 const loginController = async (req, res, next) => {
   try {
@@ -39,7 +39,6 @@ const findIdUserController = async (req, res, next) => {
 const createUserController = async (req, res, next) => {
   try {
     const { username, password, roleUserId, barcodeId } = req.body;
-    console.log("controller",roleUserId)
     const result = await createUser({ username: username, password: password, roleUserId : roleUserId, barcodeId: barcodeId })
     return res.status(result.code).send(result)
     
@@ -69,12 +68,10 @@ const findAllUserController = async (req ,res, next) => {
   }
 };
 
-const updateUserController = async(req, res, next) => {
+const changePasswordController = async(req, res, next) => {
   try{
-    const loginId = req.userId;
-    console.log(loginId)
-    const {id, username, password, barcodeId} = req.body;
-    const result = await updateUser(id,{username:username, password:password, barcodeId: barcodeId})
+    const {id, password} = req.body;
+    const result = await changePassword(id, password)
     return res.status(result.code).send(result)
   }catch (err){
     logEvent(LOGTYPE.ERROR, {
@@ -86,6 +83,23 @@ const updateUserController = async(req, res, next) => {
     .status(err.message)
   }
 };
+
+const changeBarcodeIdController = async(req, res, next) => {
+  try{
+    const {id, barcodeId} = req.body;
+    const result = await changeBarcodeId(id, barcodeId)
+    return res.status(result.code).send(result)
+
+  } catch (err){
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserControllerLogTitle.ERROR,
+      logMessage: err.message,
+    });
+    return res
+    .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+    .status(err.message)
+  }
+}
 
 const deleteUserController = async (req, res, next) => {
   try{
@@ -110,6 +124,7 @@ module.exports = {
   findIdUserController,
   createUserController,
   findAllUserController,
-  updateUserController,
-  deleteUserController
+  changePasswordController,
+  deleteUserController,
+  changeBarcodeIdController
 }

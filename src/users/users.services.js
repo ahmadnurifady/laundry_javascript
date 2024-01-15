@@ -5,8 +5,8 @@ const { Users } = require("./users.model");
 const { responseApi } = require("../utils/response");
 const { constants } = require("http2");
 const bcrypt = require("bcrypt");
-const {v4} = require("uuid");
-const jwt =require("jsonwebtoken");
+const { v4 } = require("uuid");
+const jwt = require("jsonwebtoken");
 const { RoleUsers } = require("../role_user/role.user");
 
 const login = async ({ username = "", password = "" }) => {
@@ -27,16 +27,17 @@ const login = async ({ username = "", password = "" }) => {
       });
     }
 
-    const token = jwt.sign({id: findUser.id}, process.env.JWT_SECRET,{
+    const token = jwt.sign({ id: findUser.id }, process.env.JWT_SECRET, {
       expiresIn: process.env.REFRESH_EXPIRED,
     });
 
     return responseApi({
       message: "success login",
       code: constants.HTTP_STATUS_OK,
-      data: {token : token} });
+      data: { token: token }
+    });
   } catch (e) {
-    
+
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.ERROR,
@@ -52,7 +53,7 @@ const login = async ({ username = "", password = "" }) => {
 const findUserById = async (id) => {
   try {
     const findIdUser = await Users.findByPk(id);
-    if(!findIdUser){
+    if (!findIdUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
         message: UserServiceErrorMessage.NOT_FOUND
@@ -76,23 +77,23 @@ const findUserById = async (id) => {
   }
 }
 
-const createUser = async ({username = "", password = "",roleUserId = 0, barcodeId = ""}) => {
+const createUser = async ({ username = "", password = "", roleUserId = 0, barcodeId = "" }) => {
   try {
     const checkUser = await Users.findOne({
       where: {
         username: username
       }
     })
-    if(checkUser){
+    if (checkUser) {
       return responseApi({
-        message:"username is already in use",
+        message: "username is already in use",
         data: null,
         code: constants.HTTP_STATUS_BAD_REQUEST
       });
     };
 
     const checkRole = await RoleUsers.findByPk(roleUserId)
-    if(!checkRole){
+    if (!checkRole) {
       return responseApi({
         message: "role is doesn't exist",
         code: constants.HTTP_STATUS_BAD_REQUEST,
@@ -104,18 +105,18 @@ const createUser = async ({username = "", password = "",roleUserId = 0, barcodeI
         barcodeId: barcodeId
       }
     });
-    if(checkBarcodeId){
+    if (checkBarcodeId) {
       return responseApi({
         message: "BarcodeId is already use",
         code: constants.HTTP_STATUS_BAD_REQUEST,
       })
     };
 
-    
+
     const create = await Users.create({
       id: v4(),
       username: username,
-      password : await bcrypt.hash(password, 15),
+      password: await bcrypt.hash(password, 15),
       roleUserId: roleUserId,
       barcodeId: barcodeId,
     });
@@ -125,7 +126,6 @@ const createUser = async ({username = "", password = "",roleUserId = 0, barcodeI
       code: constants.HTTP_STATUS_CREATED,
     });
   } catch (e) {
-    console.log(e)
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
@@ -137,7 +137,7 @@ const createUser = async ({username = "", password = "",roleUserId = 0, barcodeI
   };
 };
 
-const findAll = async() => {
+const findAll = async () => {
   try {
 
     const findAllUser = await Users.findAll()
@@ -159,29 +159,29 @@ const findAll = async() => {
   }
 };
 
-const updateUser = async(id,{username = "", password = "", barcodeId = ""}) => {
+const changePassword = async (id, password = "" ) => {
   try {
     const findUser = await Users.findByPk(id)
-    if(!findUser){
+    if (!findUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
         message: UserServiceErrorMessage.NOT_FOUND
       });
     };
-    if(username){
-      findUser.username = username
-    }
-    if(password){
-    findUser.password = password
-    } 
-    if(barcodeId){
-    findUser.barcodeId = barcodeId
-    };
-    findUser.save()
+
+    const encryptedPassword = await bcrypt.hash(password, 15);
+
+    const updateUser = await Users.update(
+      { password: encryptedPassword }, {
+      where: {
+        id: findUser.id
+      },
+      fields: ['password']
+    });
 
     return responseApi({
-      message: "success update user",
-      data: {},
+      message: "success update password user",
+      data: updateUser,
       code: constants.HTTP_STATUS_OK
     });
   } catch (e) {
@@ -196,10 +196,47 @@ const updateUser = async(id,{username = "", password = "", barcodeId = ""}) => {
   };
 };
 
-const deleteUser = async(id) => {
+const changeBarcodeId = async (id, barcodeId = "") => {
   try{
     const findUser = await Users.findByPk(id);
     if(!findUser){
+      return responseApi({
+        code: constants.HTTP_STATUS_NOT_FOUND,
+        message: UserServiceErrorMessage.NOT_FOUND
+      });
+    };
+  
+    const updateUser = await Users.update(
+      { barcodeId : barcodeId }, {
+      where: {
+        id: findUser.id
+      },
+      fields: ['barcodeId']
+    });
+  
+    return responseApi({
+      message: "success update barcodeId user",
+      data: updateUser,
+      code: constants.HTTP_STATUS_OK
+    });
+  } catch (e){
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserServiceLogTitle.ERROR,
+      logMessage: e.message,
+    });
+    return responseApi({
+      code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      message: e.message,
+    });
+  }
+
+
+}
+
+const deleteUser = async (id) => {
+  try {
+    const findUser = await Users.findByPk(id);
+    if (!findUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
         message: UserServiceErrorMessage.NOT_FOUND
@@ -213,7 +250,7 @@ const deleteUser = async(id) => {
       data: {},
       code: constants.HTTP_STATUS_OK
     })
-  }catch (e){
+  } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
@@ -226,10 +263,11 @@ const deleteUser = async(id) => {
 }
 
 module.exports = {
-    login,
-    findUserById,
-    createUser,
-    findAll,
-    updateUser,
-    deleteUser
+  login,
+  findUserById,
+  createUser,
+  findAll,
+  changePassword,
+  deleteUser,
+  changeBarcodeId
 }

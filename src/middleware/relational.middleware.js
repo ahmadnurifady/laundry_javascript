@@ -11,24 +11,17 @@ async function RelationalMiddleware(req, res, next) {
 
         Linens.belongsTo(Linens, {foreignKey: "id"})
 
-
         Linens.belongsTo(Category)
         Category.hasMany(Linens)
 
+        Users.belongsTo(Transaction, {foreignKey: "id"})
+
+        Transaction.belongsTo(Linens)
+        Linens.hasMany(Transaction)
+
         next()
- 
-
-}
-
-const RelationalTX = async (res, req, next) => {
-    Users.belongsTo(Transaction)
-
-    Transaction.belongsTo(Linens)
-    Linens.hasMany(Transaction)
-    next()
-}
+};
 
 module.exports = {
-    RelationalMiddleware,
-    RelationalTX
+    RelationalMiddleware
 }

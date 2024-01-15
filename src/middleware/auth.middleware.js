@@ -18,9 +18,6 @@ const roleValidation = async (req, res, next) => {
     if (!authorization) {
         return res.status(responseUnauthorized.code).send(responseUnauthorized)
     }
-
-    console.log(authorization)
-
     try {
         const bearerToken = authorization.slice(7);
         const { id } = jwt.verify(bearerToken, process.env.JWT_SECRET);
