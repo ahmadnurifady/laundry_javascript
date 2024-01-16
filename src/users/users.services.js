@@ -77,6 +77,32 @@ const findUserById = async (id) => {
   }
 }
 
+const findUserByBarcode = async ({barcodeId = ""}) => {
+  try{
+    const findUser = await Users.findOne({where :{barcodeId: barcodeId}});
+    if(!findUser){
+      return responseApi({
+        code: constants.HTTP_STATUS_NOT_FOUND,
+        message: UserServiceErrorMessage.NOT_FOUND
+      })
+    };
+    return responseApi({
+      message: "success get user by barcode",
+      data: findUser.username,
+      code: constants.HTTP_STATUS_OK
+    })
+  } catch (e){
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: UserServiceLogTitle.ERROR,
+      logMessage: e.message,
+    });
+    return responseApi({
+      code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      message: e.message,
+    });
+  }
+}
+
 const createUser = async ({ username = "", password = "", roleUserId = 0, barcodeId = "" }) => {
   try {
     const checkUser = await Users.findOne({
@@ -181,7 +207,7 @@ const changePassword = async (id, password = "" ) => {
 
     return responseApi({
       message: "success update password user",
-      data: updateUser,
+      data: findUser,
       code: constants.HTTP_STATUS_OK
     });
   } catch (e) {
@@ -216,7 +242,7 @@ const changeBarcodeId = async (id, barcodeId = "") => {
   
     return responseApi({
       message: "success update barcodeId user",
-      data: updateUser,
+      data: findUser,
       code: constants.HTTP_STATUS_OK
     });
   } catch (e){
@@ -265,6 +291,7 @@ const deleteUser = async (id) => {
 module.exports = {
   login,
   findUserById,
+  findUserByBarcode,
   createUser,
   findAll,
   changePassword,
