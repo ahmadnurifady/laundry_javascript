@@ -16,9 +16,6 @@ const createLinen  = async({rfid = "", categoryId = 0, name = ""}) => {
             categoryId: categoryId,
             name: name,
         });
-
-        console.log(create)
-
         return responseApi({
             message: "Success Create Linen",
             data: create,

@@ -30,6 +30,7 @@ const Users = connection.define("users", {
   barcodeId: {
     type: DataTypes.STRING,
     allowNull: true,
+    unique: true
   }
 });
 

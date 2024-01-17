@@ -1,28 +1,26 @@
-const { CategoryLinen, Category } = require("../category_linen/category.linen");
+const { Category } = require("../category_linen/category.linen");
 const { Linens } = require("../linens/linen.model");
 const { RoleUsers } = require("../role_user/role.user");
 const { Transaction } = require("../transaction/transaction.model");
 const { Users } = require("../users/users.model");
-const { constants } = require('http2');
-const { responseApi } = require("../utils/response");
 
 
 async function RelationalMiddleware(req, res, next) {
         Users.belongsTo(RoleUsers)
         RoleUsers.hasMany(Users)
 
-        Linens.hasMany(Linens)
-
+        Linens.belongsTo(Linens, {foreignKey: "id"})
 
         Linens.belongsTo(Category)
         Category.hasMany(Linens)
 
-        Linens.belongsTo(Transaction)
-        Transaction.hasMany(Linens)
-        next()
- 
+        Users.belongsTo(Transaction, {foreignKey: "id"})
 
-}
+        Transaction.belongsTo(Linens)
+        Linens.hasMany(Transaction)
+
+        next()
+};
 
 module.exports = {
     RelationalMiddleware

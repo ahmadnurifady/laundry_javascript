@@ -35,7 +35,6 @@ const Linens = connection.define("linens", {
       key:  'id',
     }
   }
-
 });
 
 

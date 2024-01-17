@@ -2,7 +2,7 @@ const bunyan = require("bunyan");
 const { LOGTYPE } = require("./logger.domain");
 const logger = bunyan.createLogger({
   name: process.env.APP_NAME || "Backend Laundry",
-  level: "info",
+  level: "error",
   streams: [
     {
       stream: process.stdout,
