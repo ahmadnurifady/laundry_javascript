@@ -39,7 +39,7 @@ const findIdUserController = async (req, res, next) => {
 const findUserByBarcodeController  = async (req, res, next) => {
   try{
     const {barcodeId} = req.body;
-    const result = await findUserByBarcode({barcodeId: barcodeId});
+    const result = await findUserByBarcode(barcodeId);
     return res.status(result.code).send(result)
   } catch (err){
     logEvent(LOGTYPE.ERROR, {

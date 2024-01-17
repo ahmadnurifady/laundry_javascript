@@ -1,8 +1,8 @@
-const { v4 } = require("uuid")
+const { v4 } = require("uuid");
 const { Transaction } = require("./transaction.model");
 const { responseApi } = require("../utils/response");
 const { constants } = require("http2");
-const { TransactionServiceLogTitle } = require("./transaction.domain");
+const { TransactionServiceLogTitle, TransactionServiceErrorMessage } = require("./transaction.domain");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
 const { Users } = require("../users/users.model");
@@ -10,11 +10,10 @@ const { Linens } = require("../linens/linen.model");
 
 
 
-const createTransaction = async({givenBy = "", takenBy = "", isMoved = false, linenId = ""}) => {
+const createTransaction = async({ takenBy = "", isMoved = false, linenId = ""}) => {
     try {
         const create = await Transaction.create({
             id:  v4(),
-            givenBy: givenBy,
             takenBy:takenBy,
             isMoved:isMoved,
             linenId: linenId,
@@ -37,6 +36,50 @@ const createTransaction = async({givenBy = "", takenBy = "", isMoved = false, li
     }
 };
 
+const serviceInOut = async ({linenId = "", givenBy = "", takenBy = ""}) => {
+    try{
+        console.log("mantap")
+        const findTX = await Transaction.findOne({where: {
+            linenId: linenId,
+            isMoved: false,
+            takenBy: givenBy
+        }});
+        if(!findTX){
+            return responseApi({
+                code: constants.HTTP_STATUS_NOT_FOUND,
+                message:TransactionServiceErrorMessage.NOT_FOUND
+              })
+        };
+        console.log(typeof findTX.takenBy)
+        // console.log(findTX)
+
+        const createTX = await Transaction.create({
+            id: v4(),
+            linenId: linenId,
+            isMoved: true,
+            takenBy: takenBy,
+            givenBy: givenBy
+        });
+        return responseApi({
+            message: "Success Transaction IN OUT",
+            data: createTX,
+            code: constants.HTTP_STATUS_CREATED
+        });
+
+
+    } catch (e){
+        logEvent(LOGTYPE.ERROR, {
+            logTitle: TransactionServiceLogTitle.ERROR,
+            logMessage: e,
+          });
+          return responseApi({
+            code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+            message: e.message,
+          });
+    }
+}
+
 module.exports =  {
-    createTransaction
+    createTransaction,
+    serviceInOut
 }

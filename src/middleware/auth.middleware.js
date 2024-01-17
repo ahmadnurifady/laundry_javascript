@@ -26,7 +26,6 @@ const roleValidation = async (req, res, next) => {
         if (!findUser) {
             return res.status(responseUnauthorized.code).send(responseUnauthorized)
         }
-
         next();
 
     } catch (err) {

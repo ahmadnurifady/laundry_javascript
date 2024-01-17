@@ -51,7 +51,7 @@ const login = async ({ username = "", password = "" }) => {
 
 
 const findUserById = async (id) => {
-  try {
+  try {    
     const findIdUser = await Users.findByPk(id);
     if (!findIdUser) {
       return responseApi({
@@ -77,9 +77,11 @@ const findUserById = async (id) => {
   }
 }
 
-const findUserByBarcode = async ({barcodeId = ""}) => {
+const findUserByBarcode = async (barcodeId = "") => {
   try{
-    const findUser = await Users.findOne({where :{barcodeId: barcodeId}});
+    const findUser = await Users.findOne({where: {
+      barcodeId:barcodeId
+    }})
     if(!findUser){
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
@@ -88,18 +90,18 @@ const findUserByBarcode = async ({barcodeId = ""}) => {
     };
     return responseApi({
       message: "success get user by barcode",
-      data: findUser.username,
+      data: {username : findUser.username},
       code: constants.HTTP_STATUS_OK
     })
   } catch (e){
-    logEvent(LOGTYPE.ERROR, {
+    logEvent(LOGTYPE.ERROR,{
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
     });
     return responseApi({
-      code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      code: constants.NGHTTP2_INTERNAL_ERROR,
       message: e.message,
-    });
+    })
   }
 }
 
