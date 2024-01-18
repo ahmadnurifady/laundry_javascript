@@ -7,10 +7,10 @@ router.post("/", createUserController);
 router.use(roleValidation)
 router.get("/getAll", findAllUserController)
 router.get("/barcode", findUserByBarcodeController)
-router.get("/:id", findIdUserController);
 router.put("/change-password", changePasswordController);
 router.put("/change-barcode", changeBarcodeIdController)
 router.delete("/delete", deleteUserController);
+router.get("/:id", findIdUserController);
 
 
 module.exports = router;

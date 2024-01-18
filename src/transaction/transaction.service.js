@@ -38,7 +38,6 @@ const createTransaction = async({ takenBy = "", isMoved = false, linenId = ""}) 
 
 const serviceInOut = async ({linenId = "", givenBy = "", takenBy = ""}) => {
     try{
-        console.log("mantap")
         const findTX = await Transaction.findOne({where: {
             linenId: linenId,
             isMoved: false,
@@ -50,8 +49,6 @@ const serviceInOut = async ({linenId = "", givenBy = "", takenBy = ""}) => {
                 message:TransactionServiceErrorMessage.NOT_FOUND
               })
         };
-        console.log(typeof findTX.takenBy)
-        // console.log(findTX)
 
         const createTX = await Transaction.create({
             id: v4(),
