@@ -1,6 +1,9 @@
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
-const { UserServiceLogTitle, UserServiceErrorMessage } = require("./users.domain");
+const {
+  UserServiceLogTitle,
+  UserServiceErrorMessage,
+} = require("./users.domain");
 const { Users } = require("./users.model");
 const { responseApi } = require("../utils/response");
 const { constants } = require("http2");
@@ -18,7 +21,7 @@ const login = async ({ username = "", password = "" }) => {
         message: UserServiceErrorMessage.WRONG_CREDENTIALS,
       });
     }
-    const isPasswordCorrect = bcrypt.compareSync(password, findUser.password)
+    const isPasswordCorrect = await bcrypt.compare(password, findUser.password);
 
     if (!isPasswordCorrect) {
       return responseApi({
@@ -34,13 +37,20 @@ const login = async ({ username = "", password = "" }) => {
     return responseApi({
       message: "success login",
       code: constants.HTTP_STATUS_OK,
-      data: { token: token }
+      data: {
+        token: token,
+        user: {
+          id: findUser.id,
+          username: findUser.username,
+          barcodeId: findUser.barcodeId,
+        },
+      },
     });
-  } catch (e) {
 
+  } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
-      logMessage: e.ERROR,
+      logMessage: e.message,
     });
     return responseApi({
       code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
@@ -49,23 +59,21 @@ const login = async ({ username = "", password = "" }) => {
   }
 };
 
-
 const findUserById = async (id) => {
-  try {    
+  try {
     const findIdUser = await Users.findByPk(id);
     if (!findIdUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
-        message: UserServiceErrorMessage.NOT_FOUND
-      })
-    };
+        message: UserServiceErrorMessage.NOT_FOUND,
+      });
+    }
     return responseApi({
       message: "success get user by id",
       data: findIdUser,
-      code: constants.HTTP_STATUS_OK
-    })
-  }
-  catch (e) {
+      code: constants.HTTP_STATUS_OK,
+    });
+  } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
@@ -75,71 +83,77 @@ const findUserById = async (id) => {
       message: e.message,
     });
   }
-}
+};
 
 const findUserByBarcode = async (barcodeId = "") => {
-  try{
-    const findUser = await Users.findOne({where: {
-      barcodeId:barcodeId
-    }})
-    if(!findUser){
+  try {
+    const findUser = await Users.findOne({
+      where: {
+        barcodeId: barcodeId,
+      },
+    });
+    if (!findUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
-        message: UserServiceErrorMessage.NOT_FOUND
-      })
-    };
+        message: UserServiceErrorMessage.NOT_FOUND,
+      });
+    }
     return responseApi({
       message: "success get user by barcode",
-      data: {username : findUser.username},
-      code: constants.HTTP_STATUS_OK
-    })
-  } catch (e){
-    logEvent(LOGTYPE.ERROR,{
+      data: { username: findUser.username },
+      code: constants.HTTP_STATUS_OK,
+    });
+  } catch (e) {
+    logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
     });
     return responseApi({
       code: constants.NGHTTP2_INTERNAL_ERROR,
       message: e.message,
-    })
+    });
   }
-}
+};
 
-const createUser = async ({ username = "", password = "", roleUserId = 0, barcodeId = "" }) => {
+const createUser = async ({
+  username = "",
+  password = "",
+  roleUserId = 0,
+  barcodeId = "",
+}) => {
   try {
     const checkUser = await Users.findOne({
       where: {
-        username: username
-      }
-    })
+        username: username,
+      },
+    });
     if (checkUser) {
       return responseApi({
         message: "username is already in use",
         data: null,
-        code: constants.HTTP_STATUS_BAD_REQUEST
+        code: constants.HTTP_STATUS_BAD_REQUEST,
       });
-    };
+    }
 
-    const checkRole = await RoleUsers.findByPk(roleUserId)
+    const checkRole = await RoleUsers.findByPk(roleUserId);
     if (!checkRole) {
       return responseApi({
         message: "role is doesn't exist",
         code: constants.HTTP_STATUS_BAD_REQUEST,
-      })
-    };
+      });
+    }
 
     const checkBarcodeId = await Users.findOne({
       where: {
-        barcodeId: barcodeId
-      }
+        barcodeId: barcodeId,
+      },
     });
     if (checkBarcodeId) {
       return responseApi({
         message: "BarcodeId is already use",
         code: constants.HTTP_STATUS_BAD_REQUEST,
-      })
-    };
-
+      });
+    }
 
     const create = await Users.create({
       id: v4(),
@@ -162,18 +176,17 @@ const createUser = async ({ username = "", password = "", roleUserId = 0, barcod
       code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
       message: e.message,
     });
-  };
+  }
 };
 
 const findAll = async () => {
   try {
-
-    const findAllUser = await Users.findAll()
+    const findAllUser = await Users.findAll();
 
     return responseApi({
       message: "success get all user",
       data: findAllUser,
-      code: constants.HTTP_STATUS_OK
+      code: constants.HTTP_STATUS_OK,
     });
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {
@@ -187,30 +200,32 @@ const findAll = async () => {
   }
 };
 
-const changePassword = async (id, password = "" ) => {
+const changePassword = async (id, password = "") => {
   try {
-    const findUser = await Users.findByPk(id)
+    const findUser = await Users.findByPk(id);
     if (!findUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
-        message: UserServiceErrorMessage.NOT_FOUND
+        message: UserServiceErrorMessage.NOT_FOUND,
       });
-    };
+    }
 
     const encryptedPassword = await bcrypt.hash(password, 15);
 
     const updateUser = await Users.update(
-      { password: encryptedPassword }, {
-      where: {
-        id: findUser.id
-      },
-      fields: ['password']
-    });
+      { password: encryptedPassword },
+      {
+        where: {
+          id: findUser.id,
+        },
+        fields: ["password"],
+      }
+    );
 
     return responseApi({
       message: "success update password user",
       data: findUser,
-      code: constants.HTTP_STATUS_OK
+      code: constants.HTTP_STATUS_OK,
     });
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {
@@ -221,33 +236,35 @@ const changePassword = async (id, password = "" ) => {
       code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
       message: e.message,
     });
-  };
+  }
 };
 
 const changeBarcodeId = async (id, barcodeId = "") => {
-  try{
+  try {
     const findUser = await Users.findByPk(id);
-    if(!findUser){
+    if (!findUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
-        message: UserServiceErrorMessage.NOT_FOUND
+        message: UserServiceErrorMessage.NOT_FOUND,
       });
-    };
-  
+    }
+
     const updateUser = await Users.update(
-      { barcodeId : barcodeId }, {
-      where: {
-        id: findUser.id
-      },
-      fields: ['barcodeId']
-    });
-  
+      { barcodeId: barcodeId },
+      {
+        where: {
+          id: findUser.id,
+        },
+        fields: ["barcodeId"],
+      }
+    );
+
     return responseApi({
       message: "success update barcodeId user",
       data: findUser,
-      code: constants.HTTP_STATUS_OK
+      code: constants.HTTP_STATUS_OK,
     });
-  } catch (e){
+  } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
@@ -257,9 +274,7 @@ const changeBarcodeId = async (id, barcodeId = "") => {
       message: e.message,
     });
   }
-
-
-}
+};
 
 const deleteUser = async (id) => {
   try {
@@ -267,17 +282,17 @@ const deleteUser = async (id) => {
     if (!findUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
-        message: UserServiceErrorMessage.NOT_FOUND
+        message: UserServiceErrorMessage.NOT_FOUND,
       });
-    };
+    }
 
-    findUser.destroy()
+    findUser.destroy();
 
     return responseApi({
       message: "success delete user",
       data: {},
-      code: constants.HTTP_STATUS_OK
-    })
+      code: constants.HTTP_STATUS_OK,
+    });
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
@@ -288,7 +303,7 @@ const deleteUser = async (id) => {
       message: e.message,
     });
   }
-}
+};
 
 module.exports = {
   login,
@@ -298,5 +313,5 @@ module.exports = {
   findAll,
   changePassword,
   deleteUser,
-  changeBarcodeId
-}
+  changeBarcodeId,
+};
