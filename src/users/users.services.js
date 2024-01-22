@@ -100,7 +100,7 @@ const findUserByBarcode = async (barcodeId = "") => {
     }
     return responseApi({
       message: "success get user by barcode",
-      data: { username: findUser.username },
+      data: { username: findUser.username, barcodeId: findUser.barcodeId },
       code: constants.HTTP_STATUS_OK,
     });
   } catch (e) {

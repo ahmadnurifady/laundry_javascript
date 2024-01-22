@@ -6,6 +6,7 @@ const { connection } = require("./src/database/connection");
 const { LOGTYPE } = require("./src/logger/logger.domain");
 const { logEvent } = require("./src/logger/logger");
 const { RelationalMiddleware } = require("./src/middleware/relational.middleware");
+const { transactionSocketHandler } = require("./src/transaction/transaction.socket.controller");
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
@@ -21,8 +22,8 @@ const io = require('socket.io')(server);
     /**
      * Socket Registrant
      */
-    io.on('connection', (socket) => {
-    })
+    io.on('connection', transactionSocketHandler)
+
 
     await connection.authenticate();
   } catch (err) {
