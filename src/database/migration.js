@@ -16,7 +16,7 @@ async function migration () {
     await Linens.sync()
     await Transaction.sync()
    try{
-    await createUser({password: '123456', roleUserId: 1, username: 'test2'});
+    await createUser({password: '123456', roleUserId: 1, username: 'teguh', barcodeId: '123456789'});
    }catch(e){
     console.log(e);
    }
