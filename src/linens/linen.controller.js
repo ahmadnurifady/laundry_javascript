@@ -3,11 +3,16 @@ const { createLinen } = require("./linen.service");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
 const { constants } = require("http2");
+const { responseApi } = require("../utils/response");
 
 
 
 const createLinenController = async (req, res, next) => {
     try{
+        if(rfid == null){
+            const result = responseApi({code: constants.HTTP_STATUS_BAD_REQUEST, message: 'RFID should not be null'});
+            return res.status(result.code).send(result)
+        }
         const {rfid, categoryId, name} = req.body;
         const result = await createLinen({
             rfid: rfid,
@@ -23,7 +28,7 @@ const createLinenController = async (req, res, next) => {
           });
           return res
           .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .status(err)
+          .send(err)
     }
 };
 

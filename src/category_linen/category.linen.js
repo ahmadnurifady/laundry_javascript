@@ -6,6 +6,7 @@ const Category = connection.define("category", {
     type: DataTypes.INTEGER,
     primaryKey: true,
     allowNull: false,
+    autoIncrement: true,
   },
 
   name: {
@@ -20,6 +21,11 @@ const Category = connection.define("category", {
 
   unit: {
     type: DataTypes.STRING,
+    allowNull: false,
+  },
+
+  price: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
 });

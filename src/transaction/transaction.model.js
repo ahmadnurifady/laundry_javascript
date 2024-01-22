@@ -32,7 +32,7 @@ const Transaction = connection.define("transaction", {
   },
 
   linenId: {
-    type: DataTypes.UUID,
+    type: DataTypes.STRING,
     allowNull: false,
     references: {
       model: 'linens',
