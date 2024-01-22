@@ -7,6 +7,7 @@ const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
 const { Users } = require("../users/users.model");
 const { Linens } = require("../linens/linen.model");
+const { cast } = require("sequelize");
 
 
 
@@ -74,9 +75,37 @@ const serviceInOut = async ({linenId = "", givenBy = "", takenBy = ""}) => {
             message: e.message,
           });
     }
+};
+
+const serviceIn = async ({takenBy = "", linenId = ""}) => {
+    try{
+        const create = await Transaction.create({
+            id: v4(),
+            givenBy: null,
+            takenBy: takenBy,
+            isMoved: false,
+            linenId: linenId
+        });
+        return responseApi({
+            message: "Success Create Transaction In",
+            data: create,
+            code: constants.HTTP_STATUS_CREATED
+        });
+
+    } catch (e){
+        logEvent(LOGTYPE.ERROR, {
+            logTitle: TransactionServiceLogTitle.ERROR,
+            logMessage: e,
+          });
+          return responseApi({
+            code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+            message: e.message,
+          });
+    }
 }
 
 module.exports =  {
     createTransaction,
-    serviceInOut
+    serviceInOut,
+    serviceIn
 }

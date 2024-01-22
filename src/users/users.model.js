@@ -8,6 +8,11 @@ const Users = connection.define("users", {
     allowNull: false,
   },
 
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+
   username: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -31,7 +36,7 @@ const Users = connection.define("users", {
     type: DataTypes.STRING,
     allowNull: true,
     unique: true
-  }
+  },
 });
 
 

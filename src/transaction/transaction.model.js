@@ -38,7 +38,8 @@ const Transaction = connection.define("transaction", {
       model: 'linens',
       key: 'id',
     }
-  }
+  },
+  
 });
 
 

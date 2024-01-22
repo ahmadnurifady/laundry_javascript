@@ -59,6 +59,8 @@ const findUserById = async (id) => {
         message: UserServiceErrorMessage.NOT_FOUND
       })
     };
+    const findRole = await RoleUsers.findByPk(findIdUser.roleUserId)
+    console.log(findRole.role)
     return responseApi({
       message: "success get user by id",
       data: findIdUser,
@@ -90,7 +92,7 @@ const findUserByBarcode = async (barcodeId = "") => {
     };
     return responseApi({
       message: "success get user by barcode",
-      data: {username : findUser.username},
+      data: {name: findUser.name},
       code: constants.HTTP_STATUS_OK
     })
   } catch (e){
@@ -105,7 +107,7 @@ const findUserByBarcode = async (barcodeId = "") => {
   }
 }
 
-const createUser = async ({ username = "", password = "", roleUserId = 0, barcodeId = "" }) => {
+const createUser = async ({name = "", username = "", password = "", roleUserId = 0, barcodeId = "" }) => {
   try {
     const checkUser = await Users.findOne({
       where: {
@@ -143,6 +145,7 @@ const createUser = async ({ username = "", password = "", roleUserId = 0, barcod
 
     const create = await Users.create({
       id: v4(),
+      name: name,
       username: username,
       password: await bcrypt.hash(password, 15),
       roleUserId: roleUserId,
@@ -207,9 +210,11 @@ const changePassword = async (id, password = "" ) => {
       fields: ['password']
     });
 
+    const findUserUpdate = await Users.findByPk(id)
+
     return responseApi({
       message: "success update password user",
-      data: findUser,
+      data: findUserUpdate,
       code: constants.HTTP_STATUS_OK
     });
   } catch (e) {
@@ -241,10 +246,12 @@ const changeBarcodeId = async (id, barcodeId = "") => {
       },
       fields: ['barcodeId']
     });
+
+    const findUserUpdate = await Users.findByPk(id);
   
     return responseApi({
       message: "success update barcodeId user",
-      data: findUser,
+      data: findUserUpdate,
       code: constants.HTTP_STATUS_OK
     });
   } catch (e){
