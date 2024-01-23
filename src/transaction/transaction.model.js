@@ -49,7 +49,13 @@ const Transaction = connection.define("transaction", {
       model: 'linens',
       key: 'id',
     }
+  },
+
+  message: {
+    type: DataTypes.STRING,
+    allowNull: false
   }
+  
 });
 
 

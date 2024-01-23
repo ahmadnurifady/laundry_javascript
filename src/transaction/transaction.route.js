@@ -1,3 +1,4 @@
+const { isMustAdmin } = require("../middleware/auth.middleware");
 const { RelationalMiddleware } = require("../middleware/relational.middleware");
 const {
   createTransactionController,
@@ -11,5 +12,7 @@ router.use(RelationalMiddleware);
 router.post("/", createTransactionController);
 router.post("/serviceInOut", serviceInOutController);
 router.post("/complete-transaction", completeTransactioController);
+router.post("/serviceIn", serviceInController)
+
 
 module.exports = router;

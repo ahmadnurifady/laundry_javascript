@@ -54,8 +54,8 @@ const findUserByBarcodeController  = async (req, res, next) => {
 
 const createUserController = async (req, res, next) => {
   try {
-    const { username, password, roleUserId, barcodeId } = req.body;
-    const result = await createUser({ username: username, password: password, roleUserId : roleUserId, barcodeId: barcodeId })
+    const { name, username, password, roleUserId, barcodeId } = req.body;
+    const result = await createUser({ name: name, username: username, password: password, roleUserId : roleUserId, barcodeId: barcodeId })
     return res.status(result.code).send(result)
     
   } catch (err) {
