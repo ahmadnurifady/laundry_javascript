@@ -79,7 +79,6 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
     await findTX.save({ transaction: t });
 
     const findUser = await Users.findByPk(takenBy)
-    const findLinen = await Linens.findByPk(linenId)
 
     const createTX = await Transaction.create(
       {
