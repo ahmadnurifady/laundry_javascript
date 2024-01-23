@@ -111,7 +111,19 @@ const serviceIn = async ({
 }) =>{
     try{
         const findUser = await Users.findByPk(takenBy)
+        if(!findUser){
+            return responseApi({
+                message: "user is doesn't exist",
+                code: constants.HTTP_STATUS_BAD_REQUEST
+            });
+        };
         const findLinen = await Linens.findByPk(linenId)
+        if(!findLinen){
+            return responseApi({
+                message: "linen is doesn't exist",
+                code: constants.HTTP_STATUS_BAD_REQUEST
+            });
+        };
 
         const create = await Transaction.create({
             id: v4(),

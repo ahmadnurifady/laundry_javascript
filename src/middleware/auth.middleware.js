@@ -64,9 +64,8 @@ const isMustAdmin = async(req, res, next) => {
         const findRole = await RoleUsers.findByPk(findUser.roleUserId)
         if(findRole.role === "admin"){
             next()
-        } else{
-            return res.status(responseUnauthorized.code).send(responseUnauthorized)
-        }
+            return
+        };
     }catch (err){
         logEvent(LOGTYPE.ERROR, {
             logTitle: AuthMiddlewareLogTitle.ERROR,
