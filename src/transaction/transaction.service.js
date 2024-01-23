@@ -12,34 +12,6 @@ const { Users } = require("../users/users.model");
 const { Linens } = require("../linens/linen.model");
 const { connection } = require("../database/connection");
 
-const createTransaction = async ({
-  takenBy = "",
-  isMoved = false,
-  linenId = "",
-}) => {
-  try {
-    const create = await Transaction.create({
-      id: v4(),
-      takenBy: takenBy,
-      isMoved: isMoved,
-      linenId: linenId,
-    });
-    return responseApi({
-      message: "Success Create Transaction",
-      data: create,
-      code: constants.HTTP_STATUS_CREATED,
-    });
-  } catch (e) {
-    logEvent(LOGTYPE.ERROR, {
-      logTitle: TransactionServiceLogTitle.ERROR,
-      logMessage: e.message,
-    });
-    return responseApi({
-      code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
-      message: e.message,
-    });
-  }
-};
 
 const bulkServiceInOut = async ({
   linenId = [],
@@ -98,6 +70,9 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
     findTX.isMoved = true;
     await findTX.save({ transaction: t });
 
+    const findUser = await Users.findByPk(takenBy)
+    const findLinen = await Linens.findByPk(linenId)
+
     const createTX = await Transaction.create(
       {
         id: v4(),
@@ -105,6 +80,7 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
         isMoved: false,
         takenBy: takenBy,
         givenBy: givenBy,
+        message: `LINEN ${findLinen.rfid} TELAH BERADA DI ${findUser.name}`
       },
       { transaction: t }
     );
@@ -129,8 +105,41 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
   }
 };
 
+const serviceIn = async ({
+    takenBy = "",
+    linenId = "",
+}) =>{
+    try{
+        const findUser = await Users.findByPk(takenBy)
+        const findLinen = await Linens.findByPk(linenId)
+
+        const create = await Transaction.create({
+            id: v4(),
+            givenBy: null,
+            takenBy: takenBy,
+            isMoved: false,
+            linenId: linenId,
+            message: `LINEN ${findLinen.rfid} TELAH MASUK KE ${findUser.name}`
+        });
+        return responseApi({
+            message: "SUCCESS SERVICE IN",
+            data: create,
+            code: constants.HTTP_STATUS_CREATED
+        })
+    } catch (e){
+        logEvent(LOGTYPE.ERROR, {
+            logTitle: TransactionServiceLogTitle.ERROR,
+            logMessage: e,
+          });
+          return responseApi({
+            code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+            message: e.message,
+          });
+    }
+}
+
 module.exports = {
-  createTransaction,
   serviceInOut,
-  bulkServiceInOut
+  bulkServiceInOut,
+  serviceIn
 };

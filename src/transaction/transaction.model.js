@@ -39,6 +39,11 @@ const Transaction = connection.define("transaction", {
       key: 'id',
     }
   },
+
+  message: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
   
 });
 
