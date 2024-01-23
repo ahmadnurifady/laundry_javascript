@@ -125,6 +125,17 @@ const serviceIn = async ({
             });
         };
 
+        const findLinenTX = await Transaction.findOne({where:{
+            linenId: linenId,
+            isCompleted: false
+        }});
+        if(!findLinenTX){
+            return responseApi({
+                message: "findLinenTX doesnt exist",
+                code:constants.HTTP_STATUS_NOT_FOUND
+            })
+        }
+
         const create = await Transaction.create({
             id: v4(),
             givenBy: null,
@@ -148,10 +159,47 @@ const serviceIn = async ({
             message: e.message,
           });
     }
+};
+
+const bulkServiceIn = async ({
+    linenId = [],
+    takenBy = ""
+}) => {
+    try{
+        if(linenId.length === 0 || typeof linenId !== "object"){
+            return responseApi({
+                code: constants.HTTP_STATUS_BAD_REQUEST,
+                message: "Linens should not be empty",
+            });
+        }
+        let failedLinen = [];
+        linenId.map(async(linen) => {
+            const result = await serviceIn({linenId: linenId, takenBy: takenBy});
+            if(result.code !== constants.HTTP_STATUS_OK){
+                failedLinen.push(linen);
+            }
+        });
+
+        return responseApi({
+            data: {failedLinen},
+            code: constants.HTTP_STATUS_OK,
+            message: "Success create transactions"
+        })
+    }catch (e){
+        logEvent(LOGTYPE.ERROR, {
+            logTitle: TransactionServiceLogTitle.ERROR,
+            logMessage: e,
+          });
+          return responseApi({
+            code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+            message: e.message,
+          });
+    }
 }
 
 module.exports = {
   serviceInOut,
   bulkServiceInOut,
-  serviceIn
+  serviceIn,
+  bulkServiceIn
 };

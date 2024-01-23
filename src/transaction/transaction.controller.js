@@ -1,8 +1,8 @@
 const {
-  createTransaction,
   serviceInOut,
   bulkServiceInOut,
   serviceIn,
+  bulkServiceIn,
 } = require("./transaction.service");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
@@ -37,7 +37,12 @@ const serviceInOutController = async (req, res, next) => {
 
 const serviceInController = async (req, res, next) => {
     try{
+        const { isBulk } = req.query;
         const {takenBy, linenId} = req.body;
+        if (isBulk) {
+            const result = await bulkServiceIn({linenId: linenId, takenBy: takenBy})
+            return res.status(result.code).send(result);
+          };
         const result = await serviceIn({
             takenBy: takenBy,
             linenId: linenId

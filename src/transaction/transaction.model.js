@@ -40,6 +40,12 @@ const Transaction = connection.define("transaction", {
     }
   },
 
+  isCompleted: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+
   message: {
     type: DataTypes.STRING,
     allowNull: false
