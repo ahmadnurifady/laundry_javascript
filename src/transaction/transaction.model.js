@@ -8,6 +8,11 @@ const Transaction = connection.define("transaction", {
     allowNull: false,
   },
 
+  trackingNumber: {
+    type: DataTypes.UUID,
+    allowNull: false
+  },
+
   givenBy: {
     type: DataTypes.UUID,
     allowNull: true,
@@ -29,6 +34,12 @@ const Transaction = connection.define("transaction", {
   isMoved: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
+  },
+
+  isCompleted: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   },
 
   linenId: {

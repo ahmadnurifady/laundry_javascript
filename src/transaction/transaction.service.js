@@ -8,7 +8,6 @@ const {
 } = require("./transaction.domain");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
-const { Users } = require("../users/users.model");
 const { Linens } = require("../linens/linen.model");
 const { connection } = require("../database/connection");
 
@@ -113,6 +112,7 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
         isMoved: false,
         takenBy: takenBy,
         givenBy: givenBy,
+        tracking
       },
       { transaction: t }
     );
@@ -137,8 +137,45 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
   }
 };
 
+const completedTransaction = async ({rfid = ''}) => {
+  const t = await connection.transaction();
+  try{
+    const findLinen = await Linens.findOne({where: {rfid: rfid}});
+    if(!findLinen) {
+      return responseApi({
+        code: constants.HTTP_STATUS_NOT_FOUND,
+        message: TransactionServiceErrorMessage.LINEN_NOT_FOUND,
+      }); 
+    }
+    
+
+     await Transaction.update({isCompleted: true}, {
+      where: {linenId: findLinen.id},
+      fields: ['isCompleted'],
+      transaction: t
+    });
+    
+    await t.commit();
+    return responseApi({
+      message: "Success Completed Transaction",
+      code: constants.HTTP_STATUS_OK,
+    });
+  }catch(e){
+    await t.rollback();
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: TransactionServiceLogTitle.ERROR,
+      logMessage: e,
+    });
+    return responseApi({
+      code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      message: e.message,
+    });
+  }
+}
+
 module.exports = {
   createTransaction,
   serviceInOut,
-  bulkServiceInOut
+  bulkServiceInOut,
+  completedTransaction
 };

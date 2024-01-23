@@ -2,6 +2,7 @@ const {
   createTransaction,
   serviceInOut,
   bulkServiceInOut,
+  completedTransaction,
 } = require("./transaction.service");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
@@ -54,7 +55,24 @@ const serviceInOutController = async (req, res, next) => {
   }
 };
 
+const completeTransactioController = async (req, res) => {
+  try {
+    const { rfid } = req.body;
+    const result = await completedTransaction({ rfid });
+    return res.status(result.code).send(result);
+  } catch (err) {
+    logEvent(LOGTYPE.ERROR, {
+      logTitle: TransactionControllerLogTitle.ERROR,
+      logMessage: err.message,
+    });
+    return res
+      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .status(err.message);
+  }
+};
+
 module.exports = {
   createTransactionController,
   serviceInOutController,
+  completeTransactioController,
 };
