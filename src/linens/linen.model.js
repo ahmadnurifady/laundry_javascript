@@ -29,7 +29,6 @@ const Linens = connection.define("linens", {
 
   replacedBy: {
     type: DataTypes.UUID,
-    allowNull: true,
     references: {
       model: "linens",
       key:  'id',

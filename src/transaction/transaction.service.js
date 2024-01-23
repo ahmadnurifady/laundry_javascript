@@ -53,9 +53,17 @@ const bulkServiceInOut = async ({
 const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
   const t = await connection.transaction();
   try {
+    const findLinen = await Linens.findOne({where: {rfid: linenId}});
+    if(!findLinen){
+      return responseApi({
+        code: constants.HTTP_STATUS_NOT_FOUND,
+        message: TransactionServiceErrorMessage.LINEN_NOT_FOUND,
+      });
+    }
+
     const findTX = await Transaction.findOne({
       where: {
-        linenId: linenId,
+        linenId: findLinen.id,
         isMoved: false,
         takenBy: givenBy,
       },
@@ -76,7 +84,7 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
     const createTX = await Transaction.create(
       {
         id: v4(),
-        linenId: linenId,
+        linenId: findLinen.id,
         isMoved: false,
         takenBy: takenBy,
         givenBy: givenBy,

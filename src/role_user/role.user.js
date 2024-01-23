@@ -6,6 +6,7 @@ const RoleUsers = connection.define("roleUsers", {
     type: DataTypes.INTEGER,
     primaryKey: true,
     allowNull: false,
+    autoIncrement: true
   },
 
   role: {
