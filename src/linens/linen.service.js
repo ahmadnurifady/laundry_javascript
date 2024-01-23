@@ -11,7 +11,8 @@ const { LOGTYPE } = require("../logger/logger.domain");
 const createLinen  = async({rfid = "", categoryId = 0, name = ""}) => {
     try{
         const create = await Linens.create({
-            id: rfid,
+            id: v4(),
+            rfid: rfid,
             categoryId: categoryId,
             name: name,
         });
