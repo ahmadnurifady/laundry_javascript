@@ -52,10 +52,10 @@ const TransactionControllerLogTitle = {
 };
 
 const TransactionServiceErrorMessage = {
-  WRONG_CREDENTIALS: "USERNAME OR PASSWORD IS WRONG",
+  WRONG_CREDENTIALS: "Username atau password salah",
   GENERAL_ERROR: "INTERNAL SERVER ERROR",
-  NOT_FOUND: "DATA IS NOT FOUND",
-  LINEN_NOT_FOUND: "LINEN IS NOT FOUND"
+  NOT_FOUND: "Data linen tersebut belum masuk di dalam transaksi. Silakan untuk melakukan In Transaksi terlebih dahulu",
+  LINEN_NOT_FOUND: "Data Linen tidak ditemukan."
 };
 
 module.exports = {

@@ -1,6 +1,6 @@
 const { Users } = require("../users/users.model");
 const { responseApi } = require("../utils/response");
-const { serviceInOut, bulkServiceInOut } = require("./transaction.service");
+const {  bulkServiceInOut, bulkServiceIn } = require("./transaction.service");
 const jwt = require("jsonwebtoken");
 const { constants } = require("http2");
 
@@ -30,8 +30,16 @@ const transactionSocketHandler = (transactionSocket) => {
   transactionSocket.on(
     "inout",
     async ({ takenBy = "", givenBy = "", linenId = [] }) => {
-      const result = bulkServiceInOut({ linenId, takenBy, givenBy });
+      const result = await bulkServiceInOut({ linenId, takenBy, givenBy });
       transactionSocket.emit("inOutSuccess", result);
+    }
+  );
+
+  transactionSocket.on(
+    "in",
+    async ({ takenBy = "", linenId = [] }) => {
+      const result = await bulkServiceIn({ linensId: linenId, takenBy });
+      transactionSocket.emit("inSuccess", result);
     }
   );
 };

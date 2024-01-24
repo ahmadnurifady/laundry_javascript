@@ -1,6 +1,7 @@
 const { Category } = require("../category_linen/category.linen");
 const { Linens } = require("../linens/linen.model");
 const { createLinen } = require("../linens/linen.service");
+const { Orders } = require("../order/order.model");
 const { RoleUsers } = require("../role_user/role.user");
 const { Transaction } = require("../transaction/transaction.model");
 const { Users } = require("../users/users.model");
@@ -17,6 +18,7 @@ async function migration() {
     await Users.sync();
     await Category.sync();
     await Linens.sync();
+    await Orders.sync();
     await Transaction.sync();
     await RoleUsers.create({ role: "admin" });
     await createUser({

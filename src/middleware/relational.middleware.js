@@ -1,5 +1,6 @@
 const { Category } = require("../category_linen/category.linen");
 const { Linens } = require("../linens/linen.model");
+const { Orders } = require("../order/order.model");
 const { RoleUsers } = require("../role_user/role.user");
 const { Transaction } = require("../transaction/transaction.model");
 const { Users } = require("../users/users.model");
@@ -18,6 +19,11 @@ async function RelationalMiddleware(req, res, next) {
 
         Transaction.belongsTo(Linens)
         Linens.hasMany(Transaction)
+        
+        
+
+        Orders.hasMany(Transaction)
+        Transaction.belongsTo(Orders)
 
         next()
 };
