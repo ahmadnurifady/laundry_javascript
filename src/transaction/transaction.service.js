@@ -83,7 +83,9 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
         isMoved: false,
         takenBy: findUserGivenBy.id,
       },
+      include: [{ model: Orders, where: { isCompleted: false } }],
     });
+
     if (!findTX) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
@@ -114,6 +116,7 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
       data: createTX,
       code: constants.HTTP_STATUS_OK,
     });
+    
   } catch (e) {
     await t.rollback();
     logEvent(LOGTYPE.ERROR, {
@@ -125,7 +128,7 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
       message: e.message,
     });
   }
-};
+};  
 
 const completedTransaction = async ({ rfid = "" }) => {
   const t = await connection.transaction();
@@ -158,7 +161,7 @@ const completedTransaction = async ({ rfid = "" }) => {
     );
 
     findTransaction.isMoved = true;
-    await findTransaction.save({transaction: t});
+    await findTransaction.save({ transaction: t });
     await await t.commit();
     return responseApi({
       message: "Success Completed Transaction",
