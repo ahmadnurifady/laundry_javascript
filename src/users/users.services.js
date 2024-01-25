@@ -30,9 +30,7 @@ const login = async ({ username = "", password = "" }) => {
       });
     }
 
-    const token = jwt.sign({ id: findUser.id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.REFRESH_EXPIRED,
-    });
+    const token = jwt.sign({ id: findUser.id }, process.env.JWT_SECRET);
 
     return responseApi({
       message: "success login",
@@ -46,7 +44,6 @@ const login = async ({ username = "", password = "" }) => {
         },
       },
     });
-
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
@@ -65,9 +62,9 @@ const findUserById = async (id) => {
     if (!findIdUser) {
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
-        message: UserServiceErrorMessage.NOT_FOUND
-      })
-    };
+        message: UserServiceErrorMessage.NOT_FOUND,
+      });
+    }
 
     return responseApi({
       message: "success get user by id",
@@ -101,11 +98,11 @@ const findUserByBarcode = async (barcodeId = "") => {
     }
     return responseApi({
       message: "success get user by barcode",
-      data: {name: findUser.name},
-      code: constants.HTTP_STATUS_OK
-    })
-  } catch (e){
-    logEvent(LOGTYPE.ERROR,{
+      data: { name: findUser.name, barcodeId: findUser.barcodeId },
+      code: constants.HTTP_STATUS_OK,
+    });
+  } catch (e) {
+    logEvent(LOGTYPE.ERROR, {
       logTitle: UserServiceLogTitle.ERROR,
       logMessage: e.message,
     });
@@ -116,7 +113,13 @@ const findUserByBarcode = async (barcodeId = "") => {
   }
 };
 
-const createUser = async ({name = "", username = "", password = "", roleUserId = 0, barcodeId = "" }) => {
+const createUser = async ({
+  name = "",
+  username = "",
+  password = "",
+  roleUserId = 0,
+  barcodeId = "",
+}) => {
   try {
     const checkUser = await Users.findOne({
       where: {
@@ -219,12 +222,12 @@ const changePassword = async (id, password = "") => {
       }
     );
 
-    const findUserUpdate = await Users.findByPk(id)
+    const findUserUpdate = await Users.findByPk(id);
 
     return responseApi({
       message: "success update password user",
       data: findUserUpdate,
-      code: constants.HTTP_STATUS_OK
+      code: constants.HTTP_STATUS_OK,
     });
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {
@@ -249,19 +252,21 @@ const changeBarcodeId = async (id, barcodeId = "") => {
     }
 
     const updateUser = await Users.update(
-      { barcodeId : barcodeId }, {
-      where: {
-        id: findUser.id
-      },
-      fields: ['barcodeId']
-    });
+      { barcodeId: barcodeId },
+      {
+        where: {
+          id: findUser.id,
+        },
+        fields: ["barcodeId"],
+      }
+    );
 
     const findUserUpdate = await Users.findByPk(id);
-  
+
     return responseApi({
       message: "success update barcodeId user",
       data: findUserUpdate,
-      code: constants.HTTP_STATUS_OK
+      code: constants.HTTP_STATUS_OK,
     });
   } catch (e) {
     logEvent(LOGTYPE.ERROR, {

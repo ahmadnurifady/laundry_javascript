@@ -10,9 +10,6 @@ const { connection } = require("./connection");
 
 async function migration() {
   try {
-    /**
-     * Testing Data
-     */
     await connection.authenticate();
     await RoleUsers.sync();
     await Users.sync();
@@ -21,16 +18,28 @@ async function migration() {
     await Orders.sync();
     await Transaction.sync();
     await RoleUsers.create({ role: "admin" });
+     /**
+     * Testing Data
+     */
     await createUser({
       password: "123456",
       roleUserId: 1,
       username: "ahmad",
+      name: "Ahmad Nur Faizi",
       barcodeId: "0987654321",
     });
     await createUser({
       password: "123456",
       roleUserId: 1,
+      username: "Teguh Triprasetya",
       username: "teguh",
+      barcodeId: "1234567890",
+    });
+    await createUser({
+      password: "123456",
+      roleUserId: 1,
+      username: "dwi",
+      name: "Dwi Haryadi",
       barcodeId: "1234567890",
     });
     await Category.create({
