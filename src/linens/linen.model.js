@@ -11,6 +11,7 @@ const Linens = connection.define("linens", {
   rfid: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true
   },
 
   categoryId: {

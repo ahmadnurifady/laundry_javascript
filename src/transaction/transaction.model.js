@@ -8,6 +8,15 @@ const Transaction = connection.define("transaction", {
     allowNull: false,
   },
 
+  orderId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: 'orders',
+      key: 'id'
+    }
+  },
+
   givenBy: {
     type: DataTypes.UUID,
     allowNull: true,
@@ -51,6 +60,8 @@ const Transaction = connection.define("transaction", {
     allowNull: false
   }
   
+}, {
+  paranoid: true
 });
 
 

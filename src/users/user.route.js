@@ -6,7 +6,7 @@ router.post("/login", loginController);
 router.post("/", createUserController);
 router.use(roleValidation)
 router.get("/getAll", findAllUserController)
-router.get("/barcode", findUserByBarcodeController)
+router.post("/barcode", findUserByBarcodeController)
 router.put("/change-password", changePasswordController);
 router.put("/change-barcode", changeBarcodeIdController)
 router.delete("/delete", deleteUserController);
