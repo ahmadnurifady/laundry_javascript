@@ -3,10 +3,9 @@ const { connection } = require("../database/connection");
 
 const RoleUsers = connection.define("roleUsers", {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     primaryKey: true,
     allowNull: false,
-    autoIncrement: true
   },
 
   role: {

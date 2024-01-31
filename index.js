@@ -13,12 +13,14 @@ const io = require('socket.io')(server);
 
 (async () => {
   const port = process.env.PORT || 5000;
-  try {
+  try {    
+    app.use(express.static('./src'))
     app.use(express.json());
     app.use(cors());
     app.use(RelationalMiddleware);
     app.use(routes);
 
+    
     /**
      * Socket Registrant
      */

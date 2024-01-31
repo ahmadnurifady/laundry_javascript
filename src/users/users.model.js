@@ -24,7 +24,7 @@ const Users = connection.define("users", {
   },
 
   roleUserId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     allowNull: false,
     references:{
       model: 'roleUsers',
