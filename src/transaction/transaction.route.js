@@ -4,7 +4,7 @@ const {
   createTransactionController,
   serviceInOutController,
   completeTransactioController,
-  serviceInController,
+  startTransactionController,
 } = require("./transaction.controller");
 
 const router = require("express").Router();
@@ -12,7 +12,7 @@ const router = require("express").Router();
 router.use(RelationalMiddleware);
 router.post("/serviceInOut", serviceInOutController);
 router.post("/complete-transaction", completeTransactioController);
-router.post("/serviceIn", serviceInController)
-
+// router.post("/serviceIn", serviceInController)
+router.post("/start-transaction", startTransactionController);
 
 module.exports = router;

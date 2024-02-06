@@ -12,29 +12,26 @@ const { Linens } = require("../linens/linen.model");
 const { connection } = require("../database/connection");
 const { Users } = require("../users/users.model");
 const { Orders } = require("../order/order.model");
-
-const bulkServiceInOut = async ({
-  linenId = [],
-  takenBy = "",
-  givenBy = "",
-}) => {
+const { OrderDetails } = require("../order/order.details.model");
+const sequelize = require("sequelize");
+const bulkServiceInOut = async ({ rfids = [], takenBy = "", givenBy = "" }) => {
   try {
-    if (linenId.length === 0 || typeof linenId !== "object") {
-    await t.rollback();
+    if (rfids.length === 0 || typeof rfids !== "object") {
       return responseApi({
         code: constants.HTTP_STATUS_BAD_REQUEST,
         message: "Linens should not be empty",
       });
     }
+
     let failedLinen = [];
-    for (let i = 0; i < linenId.length; i++) {
+    for (let i = 0; i < rfids.length; i++) {
       const result = await serviceInOut({
-        linenId: linenId[i],
+        rfids: rfids[i],
         takenBy,
         givenBy,
       });
       if (result.code !== constants.HTTP_STATUS_OK)
-        failedLinen.push(linenId[i]);
+        failedLinen.push({ rfid: rfids[i], reasonFailed: result.message });
     }
 
     return responseApi({
@@ -54,10 +51,10 @@ const bulkServiceInOut = async ({
   }
 };
 
-const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
+const serviceInOut = async ({ rfids = "", givenBy = "", takenBy = "" }) => {
   const t = await connection.transaction();
   try {
-    const findLinen = await Linens.findOne({ where: { rfid: linenId } });
+    const findLinen = await Linens.findOne({ where: { rfid: rfids } });
     if (!findLinen) {
       await t.rollback();
       return responseApi({
@@ -80,34 +77,12 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
       });
     }
 
-    const findTX = await Transaction.findOne({
-      where: {
-        linenId: findLinen.id,
-        isMoved: false,
-        takenBy: findUserGivenBy.id,
-      },
-      include: [{ model: Orders, where: { isCompleted: false } }],
-    });
-
-    if (!findTX) {
-      await t.rollback();
-      return responseApi({
-        code: constants.HTTP_STATUS_NOT_FOUND,
-        message: TransactionServiceErrorMessage.NOT_FOUND,
-      });
-    }
-
-    findTX.isMoved = true;
-    await findTX.save({ transaction: t });
-
     const createTX = await Transaction.create(
       {
         id: v4(),
         linenId: findLinen.id,
-        isMoved: false,
         takenBy: findUserTakenBy.id,
         givenBy: findUserGivenBy.id,
-        orderId: findTX.orderId,
         message: `LINEN ${findLinen.rfid} TELAH BERADA DI ${findUserTakenBy.name}`,
       },
       { transaction: t }
@@ -120,7 +95,6 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
       data: createTX,
       code: constants.HTTP_STATUS_OK,
     });
-    
   } catch (e) {
     await t.rollback();
     logEvent(LOGTYPE.ERROR, {
@@ -132,13 +106,24 @@ const serviceInOut = async ({ linenId = "", givenBy = "", takenBy = "" }) => {
       message: e.message,
     });
   }
-};  
+};
 
-const completedTransaction = async ({ rfid = "" }) => {
+const completedTransaction = async ({ rfids = [], orderBy = "" }) => {
   const t = await connection.transaction();
   try {
-    const findLinen = await Linens.findOne({ where: { rfid: rfid } });
-    if (!findLinen) {
+    const findAllLinen = await Linens.findAll({
+      where: {
+        rfid: [...rfids],
+      },
+      attributes: [
+        [sequelize.fn("COUNT", sequelize.col("category.id")), "categoryCount"],
+        [sequelize.col("category.id"), "categoryId"],
+      ],
+      include: ["category"],
+      group: ["category.id"],
+      raw: true,
+    });
+    if (findAllLinen.length < 1) {
       await t.rollback();
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
@@ -146,28 +131,31 @@ const completedTransaction = async ({ rfid = "" }) => {
       });
     }
 
-    const findTransaction = await Transaction.findOne({
-      where: { isMoved: false, linenId: findLinen.id },
+    const findOrder = await Orders.findAll({
+      where: { orderBy: orderBy },
+      include: ["orderDetails"],
     });
-    if (!findTransaction) {
+
+    if (findOrder) {
       await t.rollback();
       return responseApi({
-        message: TransactionServiceErrorMessage.LINEN_NOT_FOUND,
-        code: constants.HTTP_STATUS_BAD_REQUEST,
+        code: constants.HTTP_STATUS_NOT_FOUND,
+        message: TransactionServiceErrorMessage.ORDER_NOT_FOUND,
       });
     }
+    let categories = {};
+    findAllLinen.map((linen) => {
+      if (!categories[linen.categoryId])
+        categories[linen.categoryId] = linen.categoryCount;
 
-    await Orders.update(
-      { isCompleted: true },
-      {
-        where: { id: findTransaction.orderId },
-        fields: ["isCompleted"],
-        transaction: t,
+      const selectedOrderDetails = findOrder.orderDetails.find(
+        (orderDetail) => orderDetail.categoryId === linen.categoryId
+      );
+
+      if (selectedOrderDetails) {
       }
-    );
+    });
 
-    findTransaction.isMoved = true;
-    await findTransaction.save({ transaction: t });
     await await t.commit();
     return responseApi({
       message: "Success Completed Transaction",
@@ -222,12 +210,7 @@ const bulkServiceIn = async ({ takenBy = "", linensId = [], givenBy = "" }) => {
   }
 };
 
-const serviceIn = async ({
-  givenBy = "",
-  takenBy = "",
-  linenId = "",
-  orderId = null,
-}) => {
+const startTransaction = async ({ givenBy = "", takenBy = "", rfids = [] }) => {
   const t = await connection.transaction();
   try {
     const findGivenBy = await Users.findOne({ where: { barcodeId: givenBy } });
@@ -235,61 +218,62 @@ const serviceIn = async ({
     if (!findTakenBy || !findGivenBy) {
       await t.rollback();
       return responseApi({
-        message: "user is doesn't exist",
+        message: TransactionServiceErrorMessage.USER_NOT_FOUND,
         code: constants.HTTP_STATUS_BAD_REQUEST,
       });
     }
-    const findLinen = await Linens.findOne({ where: { rfid: linenId } });
-    if (!findLinen) {
-    await t.rollback();
-      return responseApi({
-        message: "linen is doesn't exist",
-        code: constants.HTTP_STATUS_BAD_REQUEST,
-      });
-    }
-
-    const findTxLinen = await Transaction.findOne({
-      where: { linenId: findLinen.id },
-      include: [{ model: Orders, where: { isCompleted: false } }],
+    const findAllLinen = await Linens.findAll({
+      where: {
+        rfid: [...rfids],
+      },
+      attributes: [
+        [sequelize.fn("COUNT", sequelize.col("category.id")), "categoryCount"],
+        [sequelize.col("category.id"), "categoryId"],
+      ],
+      include: ["category"],
+      group: ["category.id"],
+      raw: true,
     });
 
-    if (findTxLinen) {
-    await t.rollback();
-
-      return responseApi({
-        message: "Linen is still have transaction",
-        code: constants.HTTP_STATUS_BAD_REQUEST,
-      });
-
-    }
-
-    let order;
-    if (!orderId) {
-      order = await Orders.create(
-        { id: v4(), orderBy: findGivenBy.id },
-        { returning: true, transaction: t }
-      );
-      
-    }
-
-    const create = await Transaction.create(
-      {
-        id: v4(),
-        givenBy: findGivenBy.id,
-        orderId: orderId ?? order.id,
-        takenBy: findTakenBy.id,
-        isMoved: false,
-        linenId: findLinen.id,
-        message: `LINEN ${findLinen.rfid} TELAH MASUK KE ${findTakenBy.name} dari ${findGivenBy.name}`,
-      },
-      { transaction: t }
+    const order = await Orders.create(
+      { id: v4(), orderBy: findGivenBy.id },
+      { returning: true, transaction: t }
     );
+
+    const createOrderDetails = findAllLinen.map((linen) => {
+      return OrderDetails.create(
+        {
+          orderId: order.id,
+          id: v4(),
+          categoryId: linen.categoryId,
+          amount: parseInt(linen.categoryCount ?? 0),
+        },
+        { transaction: t }
+      );
+    });
+
+    const createOrder = (await Promise.allSettled(createOrderDetails)).filter(
+      (resultOrder) => resultOrder.status === "rejected"
+    );
+
+    if (createOrder.length > 0) throw new Error("ERROR-CREATE-ORDER-DETAILS");
+
+    const createTranscation = await bulkServiceInOut({
+      rfids: rfids,
+      givenBy: givenBy,
+      takenBy: takenBy,
+    });
+
+    console.log(createTranscation);
+
+    if (createTranscation.code === constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      throw new Error(createTranscation.message);
 
     await t.commit();
 
     return responseApi({
       message: "SUCCESS SERVICE IN",
-      data: create,
+      data: null,
       code: constants.HTTP_STATUS_OK,
     });
   } catch (e) {
@@ -310,5 +294,5 @@ module.exports = {
   bulkServiceInOut,
   bulkServiceIn,
   completedTransaction,
-  serviceIn,
+  startTransaction,
 };

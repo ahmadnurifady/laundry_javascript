@@ -1,6 +1,7 @@
 const { Category } = require("../category_linen/category.linen");
 const { Linens } = require("../linens/linen.model");
 const { createLinen } = require("../linens/linen.service");
+const { OrderDetails } = require("../order/order.details.model");
 const { Orders } = require("../order/order.model");
 const { RoleUsers } = require("../role_user/role.user");
 const { Transaction } = require("../transaction/transaction.model");
@@ -17,8 +18,9 @@ async function migration() {
     await Linens.sync();
     await Orders.sync();
     await Transaction.sync();
+    await OrderDetails.sync();
     await RoleUsers.create({ role: "admin" });
-     /**
+    /**
      * Testing Data
      */
     await createUser({
@@ -54,6 +56,13 @@ async function migration() {
       unit: "KG",
       price: 10000,
     });
+
+    await Category.create({
+      name: "Tirai",
+      weight: 1,
+      unit: "KG",
+      price: 10000,
+    });
     await createLinen({
       categoryId: 1,
       name: "Selimut Pasien",
@@ -63,6 +72,11 @@ async function migration() {
       categoryId: 1,
       name: "Baju Operasi Pasien",
       rfid: "E2806891000500DAF231529",
+    });
+    await createLinen({
+      categoryId: 2,
+      name: "Tirai Pasien",
+      rfid: "E2806891000400DAF21792C",
     });
   } catch (e) {
     console.log(e);

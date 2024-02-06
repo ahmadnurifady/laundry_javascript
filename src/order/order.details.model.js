@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const { connection } = require("../database/connection");
 
-const Transaction = connection.define(
-  "transaction",
+const OrderDetails = connection.define(
+  "orderDetails",
   {
     id: {
       type: DataTypes.UUID,
@@ -10,35 +10,26 @@ const Transaction = connection.define(
       allowNull: false,
     },
 
-    givenBy: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: "users",
-        key: "id",
-      },
-    },
-
-    takenBy: {
+    orderId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "users",
+        model: "orders",
         key: "id",
       },
     },
 
-    linenId: {
-      type: DataTypes.UUID,
+    categoryId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "linens",
+        model: "categories",
         key: "id",
       },
     },
 
-    message: {
-      type: DataTypes.STRING,
+    amount: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
   },
@@ -48,5 +39,5 @@ const Transaction = connection.define(
 );
 
 module.exports = {
-  Transaction,
+  OrderDetails
 };
