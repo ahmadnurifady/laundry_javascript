@@ -53,11 +53,15 @@ const TransactionControllerLogTitle = {
 
 const TransactionServiceErrorMessage = {
   WRONG_CREDENTIALS: "Username atau password salah",
-  GENERAL_ERROR: "INTERNAL SERVER ERROR",
-  NOT_FOUND: "Data Pemberi bukan pemegang terakhir linen. Silakan masukkan data pemegang terakhir untuk melakukan perpindahan",
+  GENERAL_ERROR:
+    "Saat ini sedang ada masalah dari server, silakan hubungi pihak terkait untuk menyelesaikan masalah ini.",
+  NOT_FOUND:
+    "Data Pemberi bukan pemegang terakhir linen. Silakan masukkan data pemegang terakhir untuk melakukan perpindahan",
   LINEN_NOT_FOUND: "Data Linen tidak ditemukan.",
-  USER_NOT_FOUND: "Data Client atau Pengguna yang dimasukkan tidak ditemukan, silakan periksa kembali data yang dimasukkan.",
-  ORDER_NOT_FOUND: "Data Order yang dimasukkan tidak ditemukkan. Silakan cek kembali data yagndimasukkan"
+  USER_NOT_FOUND:
+    "Data Client atau Pengguna yang dimasukkan tidak ditemukan, silakan periksa kembali data yang dimasukkan.",
+  ORDER_NOT_FOUND:
+    "Data Order yang dimasukkan tidak ditemukkan. Silakan cek kembali data yagndimasukkan",
 };
 
 module.exports = {

@@ -1,11 +1,7 @@
 const {
-  createTransaction,
-  serviceInOut,
   bulkServiceInOut,
-  completedTransaction,
-  serviceIn,
   startTransaction,
-  bulkServiceIn,
+  returnTransaction,
 } = require("./transaction.service");
 const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
@@ -15,17 +11,8 @@ const { responseApi } = require("../utils/response");
 
 const serviceInOutController = async (req, res, next) => {
   try {
-    const { isBulk } = req.query;
     const { linenId, givenBy, takenBy } = req.body;
-    if (isBulk) {
-      const result = await bulkServiceInOut({ givenBy, takenBy, linenId });
-      return res.status(result.code).send(result);
-    }
-    const result = await serviceInOut({
-      linenId: linenId,
-      takenBy: takenBy,
-      givenBy: givenBy,
-    });
+    const result = await bulkServiceInOut({ givenBy, takenBy, linenId });
     return res.status(result.code).send(result);
   } catch (err) {
     logEvent(LOGTYPE.ERROR, {
@@ -38,10 +25,16 @@ const serviceInOutController = async (req, res, next) => {
   }
 };
 
-const completeTransactioController = async (req, res) => {
+const returnTransactionController = async (req, res) => {
   try {
-    const { rfid } = req.body;
-    const result = await completedTransaction({ rfid });
+    const { rfids, takenBy, givenBy, orderId, isOwned } = req.body;
+    const result = await returnTransaction({
+      rfids,
+      takenBy,
+      givenBy,
+      orderId,
+      isOwned
+    });
     return res.status(result.code).send(result);
   } catch (err) {
     logEvent(LOGTYPE.ERROR, {
@@ -53,39 +46,15 @@ const completeTransactioController = async (req, res) => {
       .send(err.message);
   }
 };
-
-// const serviceInController = async (req, res, next) => {
-//   try {
-//     const { takenBy, linenId, givenBy } = req.body;
-//     const {isBulk} = req.query;
-//     if(isBulk) {
-//       const result = await bulkServiceIn({linensId: linenId, takenBy, givenBy})
-//       return res.status(result.code).send(result);
-//     }
-
-//     const result = await serviceIn({
-//       takenBy: takenBy,
-//       linenId: linenId,
-//     });
-//     return res.status(result.code).send(result);
-//   } catch (err) {
-//     logEvent(LOGTYPE.ERROR, {
-//       logTitle: TransactionControllerLogTitle.ERROR,
-//       logMessage: err.message,
-//     });
-//     return res
-//       .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-//       .status(err.message);
-//   }
-// };
 
 const startTransactionController = async (req, res, next) => {
   try {
-    const { takenBy, rfids, givenBy } = req.body;
+    const { takenBy, rfids, givenBy, isOwned } = req.body;
     const result = await startTransaction({
       rfids: rfids,
       takenBy,
       givenBy,
+      isOwned
     });
     return res.status(result?.code).send(result);
   } catch (err) {
@@ -104,7 +73,6 @@ const startTransactionController = async (req, res, next) => {
 
 module.exports = {
   serviceInOutController,
-  completeTransactioController,
-  // serviceInController,
+  returnTransactionController,
   startTransactionController,
 };

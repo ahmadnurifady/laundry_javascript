@@ -28,6 +28,14 @@ const Linens = connection.define("linens", {
     allowNull: false,
   },
 
+  ownedBy: {
+    type: DataTypes.UUID,
+    references: {
+      model: "users",
+      key: "id"
+    }
+  },
+
   replacedBy: {
     type: DataTypes.UUID,
     references: {

@@ -14,6 +14,7 @@ const { Users } = require("../users/users.model");
 const { Orders } = require("../order/order.model");
 const { OrderDetails } = require("../order/order.details.model");
 const sequelize = require("sequelize");
+const { Category } = require("../category_linen/category.linen");
 const bulkServiceInOut = async ({ rfids = [], takenBy = "", givenBy = "" }) => {
   try {
     if (rfids.length === 0 || typeof rfids !== "object") {
@@ -108,12 +109,23 @@ const serviceInOut = async ({ rfids = "", givenBy = "", takenBy = "" }) => {
   }
 };
 
-const completedTransaction = async ({ rfids = [], orderBy = "" }) => {
+const returnTransaction = async ({
+  rfids = [],
+  givenBy = "",
+  takenBy = "",
+  orderId = "",
+  isOwned = false,
+}) => {
   const t = await connection.transaction();
+  const whereOwned = {
+    ownedBy: null,
+  };
+  if (isOwned) whereOwned.ownedBy = takenBy;
   try {
     const findAllLinen = await Linens.findAll({
       where: {
         rfid: [...rfids],
+        ...whereOwned,
       },
       attributes: [
         [sequelize.fn("COUNT", sequelize.col("category.id")), "categoryCount"],
@@ -123,6 +135,7 @@ const completedTransaction = async ({ rfids = [], orderBy = "" }) => {
       group: ["category.id"],
       raw: true,
     });
+
     if (findAllLinen.length < 1) {
       await t.rollback();
       return responseApi({
@@ -131,32 +144,63 @@ const completedTransaction = async ({ rfids = [], orderBy = "" }) => {
       });
     }
 
-    const findOrder = await Orders.findAll({
-      where: { orderBy: orderBy },
-      include: ["orderDetails"],
+    const orderDetails = await OrderDetails.findAll({
+      where: { orderId: orderId },
     });
 
-    if (findOrder) {
+    if (orderDetails.length < 1) {
       await t.rollback();
       return responseApi({
         code: constants.HTTP_STATUS_NOT_FOUND,
         message: TransactionServiceErrorMessage.ORDER_NOT_FOUND,
       });
     }
-    let categories = {};
-    findAllLinen.map((linen) => {
-      if (!categories[linen.categoryId])
-        categories[linen.categoryId] = linen.categoryCount;
 
-      const selectedOrderDetails = findOrder.orderDetails.find(
-        (orderDetail) => orderDetail.categoryId === linen.categoryId
+    const promisesUpdate = findAllLinen.map((linen) => {
+      const orderDetail = orderDetails.find(
+        (details) => details.categoryId === linen.categoryId
       );
+      if (orderDetail) {
+        if (orderDetail.amount >= linen.categoryCount) {
+          orderDetail.amount = orderDetail.amount - linen.categoryCount;
+          return orderDetail.save({ transaction: t });
+        }
 
-      if (selectedOrderDetails) {
+        orderDetail.amount = 0;
+        return orderDetail.save({ transaction: t });
       }
     });
 
-    await await t.commit();
+    const promiseResult = (await Promise.allSettled(promisesUpdate)).find(
+      (data) => {
+        data.status === "rejected";
+      }
+    );
+
+    if (promiseResult) throw new Error("ERROR-UPDATING-ORDER-DETAILS");
+    const isNotComplete = orderDetails.find((details) => details.amount > 0);
+    if (!isNotComplete) {
+      await Orders.update(
+        { isCompleted: true },
+        {
+          where: { id: orderId },
+          fields: ["isCompleted"],
+          transaction: t,
+          returning: true,
+        }
+      );
+    }
+
+    const trackTransaction = await bulkServiceInOut({
+      rfids: rfids,
+      takenBy,
+      givenBy,
+    });
+    if (trackTransaction.code === constants.HTTP_STATUS_INTERNAL_SERVER_ERROR) {
+      throw new Error(TransactionServiceErrorMessage.GENERAL_ERROR);
+    }
+
+    await t.commit();
     return responseApi({
       message: "Success Completed Transaction",
       code: constants.HTTP_STATUS_OK,
@@ -174,43 +218,12 @@ const completedTransaction = async ({ rfids = [], orderBy = "" }) => {
   }
 };
 
-const bulkServiceIn = async ({ takenBy = "", linensId = [], givenBy = "" }) => {
-  try {
-    if (linensId.length === 0 || typeof linensId !== "object") {
-      return responseApi({
-        code: constants.HTTP_STATUS_BAD_REQUEST,
-        message: "Linens should not be empty",
-      });
-    }
-    let failedTransactions = [];
-    for (let i = 0; i < linensId.length; i++) {
-      const result = await serviceIn({
-        takenBy,
-        linenId: linensId[i],
-        givenBy,
-      });
-      if (result.code !== constants.HTTP_STATUS_OK)
-        failedTransactions.push(linensId[i]);
-    }
-
-    return responseApi({
-      data: { failedTransactions },
-      code: constants.HTTP_STATUS_OK,
-      message: "Success create transactions",
-    });
-  } catch (e) {
-    logEvent(LOGTYPE.ERROR, {
-      logTitle: TransactionServiceLogTitle.ERROR,
-      logMessage: e,
-    });
-    return responseApi({
-      code: constants.HTTP_STATUS_INTERNAL_SERVER_ERROR,
-      message: e.message,
-    });
-  }
-};
-
-const startTransaction = async ({ givenBy = "", takenBy = "", rfids = [] }) => {
+const startTransaction = async ({
+  givenBy = "",
+  takenBy = "",
+  rfids = [],
+  isOwned = false,
+}) => {
   const t = await connection.transaction();
   try {
     const findGivenBy = await Users.findOne({ where: { barcodeId: givenBy } });
@@ -222,18 +235,29 @@ const startTransaction = async ({ givenBy = "", takenBy = "", rfids = [] }) => {
         code: constants.HTTP_STATUS_BAD_REQUEST,
       });
     }
+    const ownedBy = isOwned ? findGivenBy.id : null;
+
     const findAllLinen = await Linens.findAll({
       where: {
         rfid: [...rfids],
+        ownedBy,
       },
       attributes: [
-        [sequelize.fn("COUNT", sequelize.col("category.id")), "categoryCount"],
-        [sequelize.col("category.id"), "categoryId"],
+        [sequelize.fn("COUNT", sequelize.col("categoryId")), "categoryCount"],
+        [sequelize.col("categoryId"), "categoryId"],
       ],
-      include: ["category"],
-      group: ["category.id"],
+      group: sequelize.col("categoryId"),
       raw: true,
     });
+
+    if (findAllLinen.length < 1) {
+      await t.rollback();
+      return responseApi({
+        code: constants.HTTP_STATUS_NOT_FOUND,
+        message: TransactionServiceErrorMessage.LINEN_NOT_FOUND,
+      });
+    }
+    
 
     const order = await Orders.create(
       { id: v4(), orderBy: findGivenBy.id },
@@ -264,8 +288,6 @@ const startTransaction = async ({ givenBy = "", takenBy = "", rfids = [] }) => {
       takenBy: takenBy,
     });
 
-    console.log(createTranscation);
-
     if (createTranscation.code === constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
       throw new Error(createTranscation.message);
 
@@ -290,9 +312,7 @@ const startTransaction = async ({ givenBy = "", takenBy = "", rfids = [] }) => {
 };
 
 module.exports = {
-  serviceInOut,
   bulkServiceInOut,
-  bulkServiceIn,
-  completedTransaction,
+  returnTransaction,
   startTransaction,
 };

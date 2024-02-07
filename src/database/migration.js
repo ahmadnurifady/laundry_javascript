@@ -1,3 +1,4 @@
+const { v4 } = require("uuid");
 const { Category } = require("../category_linen/category.linen");
 const { Linens } = require("../linens/linen.model");
 const { createLinen } = require("../linens/linen.service");
@@ -23,19 +24,31 @@ async function migration() {
     /**
      * Testing Data
      */
+    // await createUser({
+    //   password: "123456",
+    //   roleUserId: 1,
+    //   username: "Teguh Triprasetya",
+    //   username: "teguh",
+    //   barcodeId: "1234567890",
+    // });
+
+    const createUserTest = await Users.create(
+      {
+        id: v4(),
+        password: "123456",
+        roleUserId: 1,
+        name: "Teguh Triprasetya",
+        username: "teguh",
+        barcodeId: "1234567890",
+      },
+      { returning: true }
+    );
     await createUser({
       password: "123456",
       roleUserId: 1,
       username: "ahmad",
       name: "Ahmad Nur Faizi",
       barcodeId: "0987654321",
-    });
-    await createUser({
-      password: "123456",
-      roleUserId: 1,
-      username: "Teguh Triprasetya",
-      username: "teguh",
-      barcodeId: "1234567890",
     });
     await createUser({
       password: "123456",
@@ -67,6 +80,7 @@ async function migration() {
       categoryId: 1,
       name: "Selimut Pasien",
       rfid: "E2806891000400DAF22792C",
+      ownedBy: createUserTest.id,
     });
     await createLinen({
       categoryId: 1,

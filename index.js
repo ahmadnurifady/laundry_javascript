@@ -18,13 +18,10 @@ const io = require('socket.io')(server);
     app.use(cors());
     app.use(RelationalMiddleware);
     app.use(routes);
-
     /**
      * Socket Registrant
      */
     io.on('connection', transactionSocketHandler)
-
-
     await connection.authenticate();
   } catch (err) {
     logEvent(LOGTYPE.FATAL, {
