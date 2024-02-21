@@ -3,7 +3,6 @@ const { logEvent } = require("../logger/logger");
 const { LOGTYPE } = require("../logger/logger.domain");
 const { constants } = require("http2");
 const { ReportControllerLogTitle } = require("./report.domain");
-const { upload } = require("../middleware/multer.middleware");
 
 
 const createReportController =  async (req, res, next) =>{
@@ -11,9 +10,6 @@ const createReportController =  async (req, res, next) =>{
 
         const {linenId, note} = req.body;
         const photo = req.file;
-
-        console.log(typeof photo)
-        console.log(photo)
     
         const result = await createReport({
             linenId: linenId,
