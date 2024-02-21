@@ -1,70 +1,59 @@
 const { DataTypes } = require("sequelize");
 const { connection } = require("../database/connection");
 
-const Transaction = connection.define("transaction", {
-  id: {
-    type: DataTypes.UUID,
-    primaryKey: true,
-    allowNull: false,
-  },
+const Transaction = connection.define(
+  "transaction",
+  {
+    id: {
+      type: DataTypes.UUID,
+      primaryKey: true,
+      allowNull: false,
+    },
 
-  orderId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: 'orders',
-      key: 'id'
-    }
-  },
+    givenBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
 
-  givenBy: {
-    type: DataTypes.UUID,
-    allowNull: true,
-    references: {
-        model: 'users',
-        key: 'id',
-    }
-  },
+    takenBy: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
 
-  takenBy: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-        model: 'users',
-        key: 'id',
-    }
-  },
+    linenId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "linens",
+        key: "id",
+      },
+    },
 
-  isMoved: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-  },
+    isCompleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
 
-  linenId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: 'linens',
-      key: 'id',
-    }
+    message: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   },
-
-  isCompleted: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: false
-  },
-
-  message: {
-    type: DataTypes.STRING,
-    allowNull: false
+  {
+    paranoid: true,
   }
   
-}, {
-  paranoid: true
-});
-
+);
 
 module.exports = {
-    Transaction
-}
+  Transaction,
+};
